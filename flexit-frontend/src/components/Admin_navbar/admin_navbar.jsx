@@ -20,13 +20,21 @@ function AdminNavbar() {
               </span>
             </div>
             
-            {/* Navigation Link: Dashboard */}
-            <div className="hidden md:flex items-center ml-4">
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center ml-4 gap-2">
               <a 
                 href="/admin/dashboard" 
                 className="relative px-5 py-2.5 rounded-full bg-gray-50 text-gray-700 font-semibold text-sm transition-all hover:bg-white hover:text-[#61CE70] hover:shadow-md border border-transparent hover:border-gray-200 group"
               >
                 Dashboard
+                <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-[#61CE70] group-hover:w-1/2 group-hover:-translate-x-1/2 transition-all duration-300 ease-out rounded-full"></span>
+              </a>
+              
+              <a 
+                href="/admin/resources" 
+                className="relative px-5 py-2.5 rounded-full text-gray-600 font-semibold text-sm transition-all hover:bg-white hover:text-[#61CE70] hover:shadow-md border border-transparent hover:border-gray-200 group"
+              >
+                Resources
                 <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-[#61CE70] group-hover:w-1/2 group-hover:-translate-x-1/2 transition-all duration-300 ease-out rounded-full"></span>
               </a>
             </div>
