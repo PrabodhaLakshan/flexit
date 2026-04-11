@@ -4,6 +4,7 @@ import com.flexit.exception.ResourceNotFoundException;
 import com.flexit.model.*;
 import com.flexit.repository.TicketRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @Service

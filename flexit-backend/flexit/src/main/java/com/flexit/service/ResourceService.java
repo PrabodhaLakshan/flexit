@@ -2,7 +2,6 @@ package com.flexit.service;
 
 import com.flexit.exception.ResourceNotFoundException;
 import com.flexit.model.Resource;
-import com.flexit.model.ResourceType;
 import com.flexit.repository.ResourceRepository;
 import org.springframework.stereotype.Service;
 
