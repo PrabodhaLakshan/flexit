@@ -1,6 +1,20 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 function AdminSidebar() {
+  const location = useLocation();
+  
+  const isActive = (path) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+
+  const getLinkClasses = (path) => {
+    if (isActive(path)) {
+      return "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-[#61CE70] bg-[#61CE70]/10 border border-[#61CE70]/20 shadow-sm transition-all";
+    }
+    return "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors";
+  };
+
   return (
     <aside className="w-64 bg-slate-900 border-r border-slate-800 shadow-xl flex flex-col h-full z-10 transition-all duration-300">
       <div className="flex flex-col flex-1 pb-4 overflow-y-auto">
@@ -9,29 +23,29 @@ function AdminSidebar() {
             Admin Controls
           </h2>
           <nav className="flex-1 space-y-2 relative">
-            <a 
-              href="/admin/dashboard" 
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-[#61CE70] bg-[#61CE70]/10 border border-[#61CE70]/20 shadow-sm transition-all"
+            <Link 
+              to="/admin/dashboard" 
+              className={getLinkClasses('/admin/dashboard')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
               Dashboard
-            </a>
+            </Link>
             
-            <a 
-              href="/admin/resources" 
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+            <Link 
+              to="/admin/resources" 
+              className={getLinkClasses('/admin/resources')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
               Resource Management
-            </a>
+            </Link>
             
-            <a 
-              href="/admin/users" 
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+            <Link 
+              to="/admin/users" 
+              className={getLinkClasses('/admin/users')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
               User Management
-            </a>
+            </Link>
           </nav>
         </div>
       </div>
