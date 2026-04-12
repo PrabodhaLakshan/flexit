@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import ResourceForm from './components/resources/ResourceForm';
 import AdminNavbar from './components/Admin_navbar/admin_navbar';
 import AdminDashboard from './pages/admin_dashboard/admin_dashboard';
-
+import AppRoutes from "./routes/AppRoutes";
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
@@ -24,6 +24,7 @@ function App() {
 
   if (currentPath === '/admin/resources') {
     return (
+      
       <div className="min-h-screen bg-gray-50">
         <AdminNavbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -33,11 +34,16 @@ function App() {
           />
         </main>
       </div>
+      
     );
+  }
+  else if (currentPath.startsWith('/ ')) {
+    return <AppRoutes />;
   }
 
   // 404 Fallback
   return (
+    
     <div className="min-h-screen flex items-center justify-center bg-gray-50 flex-col">
        <h1 className="text-2xl font-bold text-gray-900 mb-4">404 - Page Not Found</h1>
        <a href="/admin/dashboard" className="text-[#61CE70] font-semibold hover:underline">
@@ -45,6 +51,7 @@ function App() {
        </a>
     </div>
   );
+ 
 }
 
 export default App;
