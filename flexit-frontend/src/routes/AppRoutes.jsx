@@ -5,6 +5,7 @@ import AdminDashboard from "../pages/admin_dashboard/admin_dashboard";
 import AdminBookingsPage from "../pages/bookings/AdminBookingsPage";
 import BookingsFormPage from "../pages/bookings/BookingsFormPage";
 import MyBookingsPage from "../pages/bookings/MyBookingsPage";
+import UserDashboardPage from "../pages/bookings/UserDashboardPage";
 
 function AppRoutes() {
   return (
@@ -12,6 +13,7 @@ function AppRoutes() {
       <Routes>
 
         {/* USER ROUTES */}
+        <Route path="/user/dashboard" element={<UserDashboardPage />} />
         <Route path="/book-resource" element={<BookingsFormPage />} />
         <Route path="/my-bookings" element={<MyBookingsPage />} />
 
