@@ -21,12 +21,36 @@ function BookingsFormPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  const getMinDateTime = () => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const localNow = new Date(now.getTime() - offset * 60000);
+    return localNow.toISOString().slice(0, 16);
+  };
+
+  const getMaxDateTime = () => {
+    const max = new Date();
+    max.setMonth(max.getMonth() + 1);
+    const offset = max.getTimezoneOffset();
+    const localMax = new Date(max.getTime() - offset * 60000);
+    return localMax.toISOString().slice(0, 16);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: value,
+      };
+
+      if (name === "startTime" && prev.endTime && value && prev.endTime <= value) {
+        updated.endTime = "";
+      }
+
+      return updated;
+    });
   };
 
   const handleClear = () => {
@@ -43,8 +67,36 @@ function BookingsFormPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
     setMessage("");
+
+    const start = new Date(formData.startTime);
+    const end = new Date(formData.endTime);
+
+    if (end <= start) {
+      setMessage("End time must be later than start time.");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.expectedAttendees && Number(formData.expectedAttendees) <= 0) {
+      setMessage("Expected attendees must be greater than 0.");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.purpose.trim().length === 0) {
+      setMessage("Purpose is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.purpose.trim().length > 100) {
+      setMessage("Purpose cannot exceed 100 characters.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const payload = {
@@ -57,8 +109,17 @@ function BookingsFormPage() {
       };
 
       const response = await createBooking(payload);
+
       setMessage(`Booking created successfully. Status: ${response.data.status}`);
-      handleClear();
+
+      setFormData({
+        userId: "",
+        resourceId: "",
+        startTime: "",
+        endTime: "",
+        purpose: "",
+        expectedAttendees: "",
+      });
     } catch (error) {
       console.error("Booking creation failed:", error);
       setMessage(
@@ -129,6 +190,8 @@ function BookingsFormPage() {
               name="startTime"
               value={formData.startTime}
               onChange={handleChange}
+              min={getMinDateTime()}
+              max={getMaxDateTime()}
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#61CE70] focus:bg-white"
               required
             />
@@ -144,6 +207,8 @@ function BookingsFormPage() {
               name="endTime"
               value={formData.endTime}
               onChange={handleChange}
+              min={formData.startTime || getMinDateTime()}
+              max={getMaxDateTime()}
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#61CE70] focus:bg-white"
               required
             />
@@ -160,8 +225,12 @@ function BookingsFormPage() {
               value={formData.purpose}
               onChange={handleChange}
               placeholder="Enter the purpose of this booking request"
+              maxLength={100}
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#61CE70] focus:bg-white"
             ></textarea>
+            <p className="mt-2 text-xs text-slate-500">
+              {formData.purpose.length}/100 characters
+            </p>
           </div>
 
           <div>
