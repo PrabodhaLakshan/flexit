@@ -6,8 +6,12 @@ function CreateResourcePage() {
   const navigate = useNavigate();
 
   const handleCreate = async (data) => {
-    await createResource(data);
-    navigate("/admin/resources");
+    try {
+      await createResource(data);
+      navigate("/admin/resources");
+    } catch (err) {
+      throw err; // Let ResourceForm catch & display the error
+    }
   };
 
   return (

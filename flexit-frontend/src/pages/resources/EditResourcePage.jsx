@@ -21,8 +21,12 @@ function EditResourcePage() {
   }, [id]);
 
   const handleUpdate = async (data) => {
-    await updateResource(id, data);
-    navigate("/admin/resources");
+    try {
+      await updateResource(id, data);
+      navigate("/admin/resources");
+    } catch (err) {
+      throw err; // Let ResourceForm catch & display the error
+    }
   };
 
   if (!resource) return (
