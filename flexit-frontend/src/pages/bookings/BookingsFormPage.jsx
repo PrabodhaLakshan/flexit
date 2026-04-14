@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   CalendarDays,
   Clock3,
   Users,
   FileText,
   CheckSquare,
+  X,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { createBooking } from "../../api/bookingApi";
 
@@ -19,7 +22,38 @@ function BookingsFormPage() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "",
+    text: "",
+  });
+
+  const showAlert = (type, text) => {
+    setAlert({
+      show: true,
+      type,
+      text,
+    });
+  };
+
+  const closeAlert = () => {
+    setAlert({
+      show: false,
+      type: "",
+      text: "",
+    });
+  };
+
+  useEffect(() => {
+    if (!alert.show) return;
+
+    const timer = setTimeout(() => {
+      closeAlert();
+    }, 3500);
+
+    return () => clearTimeout(timer);
+  }, [alert.show]);
 
   const getMinDateTime = () => {
     const now = new Date();
@@ -62,55 +96,88 @@ function BookingsFormPage() {
       purpose: "",
       expectedAttendees: "",
     });
-    setMessage("");
+    closeAlert();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setLoading(true);
-    setMessage("");
+    closeAlert();
+
+    if (!formData.userId.trim()) {
+      showAlert("error", "User ID is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.resourceId.trim()) {
+      showAlert("error", "Resource ID is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.startTime) {
+      showAlert("error", "Start time is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.endTime) {
+      showAlert("error", "End time is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.purpose.trim()) {
+      showAlert("error", "Purpose is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.expectedAttendees) {
+      showAlert("error", "Expected attendees is required.");
+      setLoading(false);
+      return;
+    }
 
     const start = new Date(formData.startTime);
     const end = new Date(formData.endTime);
 
     if (end <= start) {
-      setMessage("End time must be later than start time.");
+      showAlert("error", "End time must be later than start time.");
       setLoading(false);
       return;
     }
 
-    if (formData.expectedAttendees && Number(formData.expectedAttendees) <= 0) {
-      setMessage("Expected attendees must be greater than 0.");
-      setLoading(false);
-      return;
-    }
-
-    if (formData.purpose.trim().length === 0) {
-      setMessage("Purpose is required.");
+    if (Number(formData.expectedAttendees) <= 0) {
+      showAlert("error", "Expected attendees must be greater than 0.");
       setLoading(false);
       return;
     }
 
     if (formData.purpose.trim().length > 100) {
-      setMessage("Purpose cannot exceed 100 characters.");
+      showAlert("error", "Purpose cannot exceed 100 characters.");
       setLoading(false);
       return;
     }
 
     try {
       const payload = {
-        userId: formData.userId,
-        resourceId: formData.resourceId,
+        userId: formData.userId.trim(),
+        resourceId: formData.resourceId.trim(),
         startTime: formData.startTime,
         endTime: formData.endTime,
-        purpose: formData.purpose,
+        purpose: formData.purpose.trim(),
         expectedAttendees: Number(formData.expectedAttendees),
       };
 
       const response = await createBooking(payload);
 
-      setMessage(`Booking created successfully. Status: ${response.data.status}`);
+      showAlert(
+        "success",
+        `Booking created successfully. Status: ${response.data.status}`
+      );
 
       setFormData({
         userId: "",
@@ -122,7 +189,9 @@ function BookingsFormPage() {
       });
     } catch (error) {
       console.error("Booking creation failed:", error);
-      setMessage(
+
+      showAlert(
+        "error",
         error?.response?.data?.message || "Failed to create booking request"
       );
     } finally {
@@ -132,6 +201,41 @@ function BookingsFormPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
+      {alert.show && (
+        <div className="fixed right-6 top-6 z-50 w-full max-w-sm animate-[slideIn_.25s_ease-out]">
+          <div
+            className={`flex items-start gap-3 rounded-2xl border p-4 shadow-lg backdrop-blur-sm ${
+              alert.type === "success"
+                ? "border-green-200 bg-white text-green-700"
+                : "border-red-200 bg-white text-red-700"
+            }`}
+          >
+            <div className="mt-0.5 shrink-0">
+              {alert.type === "success" ? (
+                <CheckCircle2 size={20} />
+              ) : (
+                <AlertCircle size={20} />
+              )}
+            </div>
+
+            <div className="flex-1">
+              <p className="text-sm font-semibold">
+                {alert.type === "success" ? "Success" : "Error"}
+              </p>
+              <p className="mt-1 text-sm leading-5">{alert.text}</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={closeAlert}
+              className="shrink-0 rounded-full p-1 transition hover:bg-slate-100"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8">
         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#61CE70]/10 px-4 py-2 text-sm font-semibold text-[#2d9d45]">
           <CheckSquare size={16} />
@@ -226,6 +330,7 @@ function BookingsFormPage() {
               onChange={handleChange}
               placeholder="Enter the purpose of this booking request"
               maxLength={100}
+              required
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#61CE70] focus:bg-white"
             ></textarea>
             <p className="mt-2 text-xs text-slate-500">
@@ -245,6 +350,7 @@ function BookingsFormPage() {
               value={formData.expectedAttendees}
               onChange={handleChange}
               placeholder="Enter attendee count"
+              required
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#61CE70] focus:bg-white"
             />
           </div>
@@ -257,12 +363,6 @@ function BookingsFormPage() {
             and must be reviewed by an admin.
           </p>
         </div>
-
-        {message && (
-          <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-            {message}
-          </div>
-        )}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
           <button
@@ -282,6 +382,21 @@ function BookingsFormPage() {
           </button>
         </div>
       </form>
+
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(-10px) translateX(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0) translateX(0);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
