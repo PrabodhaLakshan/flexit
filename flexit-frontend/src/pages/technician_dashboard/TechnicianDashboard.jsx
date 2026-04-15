@@ -4,6 +4,7 @@ import { getAllTickets, updateTicketStatus } from "../../api/ticketApi";
 import { getSessionUser } from "../../utils/sessionUser";
 
 const allowedStatuses = ["IN_PROGRESS", "RESOLVED"];
+const priorityFilters = ["ALL", "LOW", "MEDIUM", "HIGH"];
 
 function TechnicianDashboard() {
   const sessionUser = useMemo(() => getSessionUser(), []);
@@ -13,6 +14,7 @@ function TechnicianDashboard() {
   const [message, setMessage] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [formByTicket, setFormByTicket] = useState({});
+  const [priorityFilter, setPriorityFilter] = useState("ALL");
 
   const loadAssignedTickets = async () => {
     setLoading(true);
@@ -95,6 +97,14 @@ function TechnicianDashboard() {
     }
   };
 
+  const filteredTickets = useMemo(() => {
+    if (priorityFilter === "ALL") {
+      return tickets;
+    }
+
+    return tickets.filter((ticket) => (ticket.priority || "MEDIUM") === priorityFilter);
+  }, [tickets, priorityFilter]);
+
   if (sessionUser.role !== "TECHNICIAN") {
     return (
       <section className="space-y-4">
@@ -120,6 +130,21 @@ function TechnicianDashboard() {
         <p className="mt-3 text-xs text-slate-300">
           Logged in as: {sessionUser.userName || "Technician"} ({sessionUser.userId || "No user ID"})
         </p>
+
+        <div className="mt-5 max-w-xs">
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">Priority Filter</label>
+          <select
+            value={priorityFilter}
+            onChange={(event) => setPriorityFilter(event.target.value)}
+            className="w-full rounded-xl border border-slate-600 bg-slate-900/70 px-3 py-2 text-sm text-white outline-none focus:border-[#61CE70]"
+          >
+            {priorityFilters.map((priority) => (
+              <option key={priority} value={priority}>
+                {priority === "ALL" ? "All priorities" : priority}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {message ? (
@@ -138,9 +163,9 @@ function TechnicianDashboard() {
         <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
           Loading your assigned tickets...
         </div>
-      ) : tickets.length ? (
+      ) : filteredTickets.length ? (
         <div className="space-y-4">
-          {tickets.map((ticket) => {
+          {filteredTickets.map((ticket) => {
             const form = formByTicket[ticket.id] || { status: "IN_PROGRESS", notes: "" };
 
             return (
@@ -212,7 +237,9 @@ function TechnicianDashboard() {
         </div>
       ) : (
         <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500 shadow-sm">
-          No tickets are assigned to you right now.
+          {tickets.length
+            ? "No tickets match the selected priority filter."
+            : "No tickets are assigned to you right now."}
         </div>
       )}
     </section>
