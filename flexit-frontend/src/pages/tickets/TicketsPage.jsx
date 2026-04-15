@@ -3,6 +3,12 @@ import { assignTechnician, getAllTickets, updateTicketStatus } from "../../api/t
 
 const statusFilters = ["ALL", "OPEN", "IN_PROGRESS", "RESOLVED", "REJECTED"];
 const priorityFilters = ["ALL", "LOW", "MEDIUM", "HIGH", "URGENT"];
+const defaultTechnicians = [
+  { id: "TECH001", name: "Technician 001" },
+  { id: "TECH002", name: "Technician 002" },
+  { id: "TECH003", name: "Technician 003" },
+  { id: "TECH004", name: "Technician 004" },
+];
 
 function TicketsPage() {
   const [tickets, setTickets] = useState([]);
@@ -15,6 +21,7 @@ function TicketsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [priorityFilter, setPriorityFilter] = useState("ALL");
   const [selectedTechnicianByTicket, setSelectedTechnicianByTicket] = useState({});
+  const [customTechnicianByTicket, setCustomTechnicianByTicket] = useState({});
   const [rejectReasonByTicket, setRejectReasonByTicket] = useState({});
   const [closeNoteByTicket, setCloseNoteByTicket] = useState({});
 
@@ -50,7 +57,12 @@ function TicketsPage() {
 
   const technicianOptions = useMemo(() => {
     const seen = new Set();
-    const technicians = [];
+    const technicians = defaultTechnicians.map((tech) => ({
+      id: tech.id,
+      label: `${tech.name} (${tech.id})`,
+    }));
+
+    defaultTechnicians.forEach((tech) => seen.add(tech.id));
 
     tickets.forEach((ticket) => {
       const techId = (ticket.assignedTechnicianId || "").trim();
@@ -69,6 +81,15 @@ function TicketsPage() {
 
     return technicians;
   }, [tickets]);
+
+  const resolveTechnicianId = (ticketId) => {
+    const selected = (selectedTechnicianByTicket[ticketId] || "").trim();
+    if (selected) {
+      return selected;
+    }
+
+    return (customTechnicianByTicket[ticketId] || "").trim();
+  };
 
   const filteredTickets = useMemo(() => {
     return tickets
@@ -115,9 +136,9 @@ function TicketsPage() {
   };
 
   const handleAssign = async (ticket) => {
-    const techId = (selectedTechnicianByTicket[ticket.id] || "").trim();
+    const techId = resolveTechnicianId(ticket.id);
     if (!techId) {
-      setActionError("Please select a technician before assigning.");
+      setActionError("Please select a technician or enter a technician ID before assigning.");
       return;
     }
 
@@ -129,7 +150,7 @@ function TicketsPage() {
   };
 
   const handleReject = async (ticket) => {
-    const techId = (selectedTechnicianByTicket[ticket.id] || ticket.assignedTechnicianId || "").trim();
+    const techId = (resolveTechnicianId(ticket.id) || ticket.assignedTechnicianId || "").trim();
     const notes = (rejectReasonByTicket[ticket.id] || "").trim();
 
     if (!techId) {
@@ -164,7 +185,7 @@ function TicketsPage() {
         updateTicketStatus(ticket.id, {
           status: "RESOLVED",
           notes,
-          techId: (selectedTechnicianByTicket[ticket.id] || ticket.assignedTechnicianId || "").trim(),
+          techId: (resolveTechnicianId(ticket.id) || ticket.assignedTechnicianId || "").trim(),
           userId,
         }),
       `Ticket ${ticket.id} closed.`
@@ -330,6 +351,17 @@ function TicketsPage() {
                           </option>
                         ))}
                       </select>
+                      <input
+                        value={customTechnicianByTicket[ticket.id] || ""}
+                        onChange={(event) =>
+                          setCustomTechnicianByTicket((previous) => ({
+                            ...previous,
+                            [ticket.id]: event.target.value,
+                          }))
+                        }
+                        placeholder="or type tech ID"
+                        className="w-44 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs outline-none focus:border-[#61CE70]"
+                      />
                       <button
                         type="button"
                         onClick={() => handleAssign(ticket)}
