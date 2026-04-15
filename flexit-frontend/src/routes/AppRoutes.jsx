@@ -1,15 +1,17 @@
 import { BrowserRouter, Navigate, Outlet, Routes, Route } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
 import TechnicianLayout from "../layouts/TechnicianLayout";
-import UserLayout from "../layouts/UserLayout";
 import AdminDashboard from "../pages/admin_dashboard/admin_dashboard";
 import ResourcesPage from "../pages/resources/ResourcesPage";
 import CreateResourcePage from "../pages/resources/CreateResourcePage";
 import EditResourcePage from "../pages/resources/EditResourcePage";
 import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
 import TicketsPage from "../pages/tickets/TicketsPage";
+import CreateTicketPage from "../pages/tickets/CreateTicketPage";
+import PublicCreateTicketPage from "../pages/tickets/PublicCreateTicketPage";
+import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
+import EditTicketPage from "../pages/tickets/EditTicketPage";
 import TechnicianDashboard from "../pages/technician_dashboard/TechnicianDashboard";
-import UserDashboard from "../pages/user_dashboard/UserDashboard";
 import LoginPage from "../pages/auth/LoginPage";
 import { getSessionUser, isAuthenticated } from "../utils/sessionUser";
 
@@ -25,47 +27,36 @@ function RequireRole({ role }) {
   const sessionUser = getSessionUser();
 
   if (sessionUser.role !== role) {
-    if (sessionUser.role === "USER") {
-      return <Navigate to="/dashboard" replace />;
-    }
-
     if (sessionUser.role === "TECHNICIAN") {
       return <Navigate to="/technician/dashboard" replace />;
     }
 
-    return <Navigate to="/admin/dashboard" replace />;
+    if (sessionUser.role === "ADMIN") {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
 }
 
 function AppRoutes() {
-  const sessionUser = getSessionUser();
-  const landingPage = !isAuthenticated()
-    ? <Navigate to="/login" replace />
-    : sessionUser.role === "USER"
-      ? <Navigate to="/dashboard" replace />
-    : sessionUser.role === "TECHNICIAN"
-      ? <Navigate to="/technician/dashboard" replace />
-      : <Navigate to="/admin/dashboard" replace />;
+  const landingPage = <Navigate to="/admin/dashboard?role=ADMIN&userId=ADMIN001&userName=FlexIT%20Admin" replace />;
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/report-ticket" element={<PublicCreateTicketPage />} />
         <Route path="/" element={landingPage} />
 
         <Route element={<RequireAuth />}>
-          <Route element={<RequireRole role="USER" />}>
-            <Route element={<UserLayout />}>
-              <Route path="/dashboard" element={<UserDashboard />} />
-              <Route path="/user/dashboard" element={<UserDashboard />} />
-            </Route>
-          </Route>
-
           <Route element={<RequireRole role="TECHNICIAN" />}>
             <Route element={<TechnicianLayout />}>
               <Route path="/technician/dashboard" element={<TechnicianDashboard />} />
+              <Route path="/technician/tickets/:id" element={<TicketDetailsPage />} />
+              <Route path="/technician/tickets/edit/:id" element={<EditTicketPage />} />
             </Route>
           </Route>
 
@@ -87,7 +78,13 @@ function AppRoutes() {
 
               {/* Ticket Routes - admin management table */}
               <Route path="/tickets" element={<TicketsPage />} />
+              <Route path="/tickets/create" element={<CreateTicketPage />} />
+              <Route path="/tickets/:id" element={<TicketDetailsPage />} />
+              <Route path="/tickets/edit/:id" element={<EditTicketPage />} />
               <Route path="/admin/tickets" element={<TicketsPage />} />
+              <Route path="/admin/tickets/create" element={<CreateTicketPage />} />
+              <Route path="/admin/tickets/:id" element={<TicketDetailsPage />} />
+              <Route path="/admin/tickets/edit/:id" element={<EditTicketPage />} />
             </Route>
           </Route>
         </Route>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { assignTechnician, getAllTickets, getTechnicians, updateTicketStatus } from "../../api/ticketApi";
 
 const statusFilters = ["ALL", "OPEN", "IN_PROGRESS", "RESOLVED", "REJECTED"];
@@ -37,6 +38,34 @@ function TicketsPage() {
   const [customTechnicianByTicket, setCustomTechnicianByTicket] = useState({});
   const [rejectReasonByTicket, setRejectReasonByTicket] = useState({});
   const [closeNoteByTicket, setCloseNoteByTicket] = useState({});
+  const [popup, setPopup] = useState(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const [previewOrigin, setPreviewOrigin] = useState({ x: 50, y: 50 });
+  const [previewLens, setPreviewLens] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    bgX: 50,
+    bgY: 50,
+  });
+  const createTicketPath = "/admin/tickets/create";
+
+  const countWords = (value) => {
+    const text = (value || "").trim();
+    if (!text) {
+      return 0;
+    }
+
+    return text.split(/\s+/).length;
+  };
+
+  const showPopup = (type, message) => {
+    setPopup({ type, message });
+    window.setTimeout(() => {
+      setPopup(null);
+    }, 2800);
+  };
 
   const loadTickets = async () => {
     setLoading(true);
@@ -85,6 +114,22 @@ function TicketsPage() {
   useEffect(() => {
     loadTickets();
   }, []);
+
+  useEffect(() => {
+    if (!previewImageUrl) {
+      return;
+    }
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setPreviewImageUrl("");
+        setPreviewZoom(1);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [previewImageUrl]);
 
   const technicianOptions = useMemo(() => {
     const seen = new Set();
@@ -168,8 +213,12 @@ function TicketsPage() {
       await fn();
       setActionMessage(successText);
       await loadTickets();
+      return true;
     } catch (submitError) {
-      setActionError(submitError.message || "Action failed.");
+      const message = submitError.message || "Action failed.";
+      setActionError(message);
+      showPopup("error", message);
+      return false;
     } finally {
       setActionLoadingId("");
     }
@@ -194,32 +243,49 @@ function TicketsPage() {
     const notes = (rejectReasonByTicket[ticket.id] || "").trim();
 
     if (!techId) {
-      setActionError("Reject action needs a technician selection.");
+      const message = "Reject action needs a technician selection.";
+      setActionError(message);
+      showPopup("error", message);
       return;
     }
 
-    if (!notes) {
-      setActionError("Reject action needs a reason.");
+    if (countWords(notes) < 5) {
+      const message = "Reject reason is required with at least 5 words.";
+      setActionError(message);
+      showPopup("error", message);
       return;
     }
 
-    await runAction(
+    const success = await runAction(
       ticket.id,
       () => updateTicketStatus(ticket.id, { status: "REJECTED", notes, techId }),
-      `Ticket ${ticket.id} rejected.`
+      `Ticket ${ticket.id} rejected and removed.`
     );
+
+    if (success) {
+      showPopup("success", `Ticket ${ticket.id} rejected and deleted.`);
+    }
   };
 
   const handleClose = async (ticket) => {
     const notes = (closeNoteByTicket[ticket.id] || "").trim();
     const userId = (ticket.reportedByUserId || "").trim();
 
-    if (!userId) {
-      setActionError("Close action failed: reporter user ID is missing on this ticket.");
+    if (countWords(notes) < 5) {
+      const message = "Close reason is required with at least 5 words.";
+      setActionError(message);
+      showPopup("error", message);
       return;
     }
 
-    await runAction(
+    if (!userId) {
+      const message = "Close action failed: reporter user ID is missing on this ticket.";
+      setActionError(message);
+      showPopup("error", message);
+      return;
+    }
+
+    const success = await runAction(
       ticket.id,
       () =>
         updateTicketStatus(ticket.id, {
@@ -228,14 +294,170 @@ function TicketsPage() {
           techId: (resolveTechnicianId(ticket.id) || ticket.assignedTechnicianId || "").trim(),
           userId,
         }),
-      `Ticket ${ticket.id} closed.`
+      `Ticket ${ticket.id} closed and removed.`
     );
+
+    if (success) {
+      showPopup("success", `Ticket ${ticket.id} closed and deleted.`);
+    }
   };
 
   const isActionLoading = (ticketId) => actionLoadingId === ticketId;
 
+  const openImagePreview = (imageUrl) => {
+    setPreviewImageUrl(imageUrl);
+    setPreviewZoom(1);
+    setPreviewOrigin({ x: 50, y: 50 });
+    setPreviewLens({ visible: false, x: 0, y: 0, bgX: 50, bgY: 50 });
+  };
+
+  const closeImagePreview = () => {
+    setPreviewImageUrl("");
+    setPreviewZoom(1);
+    setPreviewOrigin({ x: 50, y: 50 });
+    setPreviewLens({ visible: false, x: 0, y: 0, bgX: 50, bgY: 50 });
+  };
+
+  const zoomInPreview = () => {
+    setPreviewZoom((previous) => Math.min(previous + 0.25, 4));
+  };
+
+  const zoomOutPreview = () => {
+    setPreviewZoom((previous) => Math.max(previous - 0.25, 0.5));
+  };
+
+  const resetPreviewZoom = () => {
+    setPreviewZoom(1);
+    setPreviewOrigin({ x: 50, y: 50 });
+    setPreviewLens((previous) => ({ ...previous, visible: false }));
+  };
+
+  const handlePreviewImageClick = (event) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - bounds.left;
+    const clickY = event.clientY - bounds.top;
+
+    const relativeX = (clickX / bounds.width) * 100;
+    const relativeY = (clickY / bounds.height) * 100;
+
+    setPreviewLens({
+      visible: true,
+      x: clickX,
+      y: clickY,
+      bgX: Math.min(100, Math.max(0, relativeX)),
+      bgY: Math.min(100, Math.max(0, relativeY)),
+    });
+  };
+
+  const handlePreviewWheelZoom = (event) => {
+    event.preventDefault();
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const relativeX = ((event.clientX - bounds.left) / bounds.width) * 100;
+    const relativeY = ((event.clientY - bounds.top) / bounds.height) * 100;
+    const nextOrigin = {
+      x: Math.min(100, Math.max(0, relativeX)),
+      y: Math.min(100, Math.max(0, relativeY)),
+    };
+
+    setPreviewOrigin(nextOrigin);
+    setPreviewZoom((previous) => {
+      const direction = event.deltaY < 0 ? 1 : -1;
+      const nextZoom = previous + direction * 0.2;
+      return Math.min(4, Math.max(0.5, nextZoom));
+    });
+  };
+
   return (
     <section className="space-y-6">
+      {popup ? (
+        <div
+          className={`fixed right-6 top-6 z-60 rounded-2xl px-4 py-3 text-sm font-semibold shadow-xl transition-opacity ${
+            popup.type === "success"
+              ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+              : "border border-rose-200 bg-rose-50 text-rose-800"
+          }`}
+        >
+          {popup.message}
+        </div>
+      ) : null}
+
+      {previewImageUrl ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4">
+          <div className="absolute inset-0" onClick={closeImagePreview} />
+          <div className="relative z-10 w-full max-w-6xl rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-2xl">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-200">Image Preview</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={zoomOutPreview}
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-[#61CE70]"
+                >
+                  Zoom -
+                </button>
+                <button
+                  type="button"
+                  onClick={zoomInPreview}
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-[#61CE70]"
+                >
+                  Zoom +
+                </button>
+                <button
+                  type="button"
+                  onClick={resetPreviewZoom}
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-[#61CE70]"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={closeImagePreview}
+                  className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <p className="mb-3 text-xs text-slate-400">
+            </p>
+
+            <div
+              className="relative max-h-[75vh] overflow-auto rounded-xl border border-slate-700 bg-slate-950 p-3 cursor-crosshair"
+              onWheel={handlePreviewWheelZoom}
+              onClick={handlePreviewImageClick}
+            >
+              <img
+                src={previewImageUrl}
+                alt="Ticket attachment preview"
+                className="mx-auto origin-center select-none"
+                style={{
+                  transform: `scale(${previewZoom})`,
+                  transformOrigin: `${previewOrigin.x}% ${previewOrigin.y}%`,
+                  transition: "transform 0.15s ease",
+                }}
+              />
+
+              {previewLens.visible ? (
+                <div
+                  className="pointer-events-none absolute h-44 w-44 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-4 border-white/90 shadow-2xl ring-2 ring-slate-900/60"
+                  style={{
+                    left: `${previewLens.x}px`,
+                    top: `${previewLens.y}px`,
+                    backgroundImage: `url(${previewImageUrl})`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundColor: "#020617",
+                    backgroundSize: `${Math.max(220, previewZoom * 260)}%`,
+                    backgroundPosition: `${previewLens.bgX}% ${previewLens.bgY}%`,
+                  }}
+                />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="rounded-3xl border border-slate-200 bg-linear-to-r from-slate-950 via-slate-900 to-[#0a192f] p-6 text-white shadow-xl sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -245,6 +467,12 @@ function TicketsPage() {
               Filter all tickets by status and priority, assign technicians, and apply reject or close actions.
             </p>
           </div>
+          <Link
+            to={createTicketPath}
+            className="inline-flex items-center justify-center rounded-2xl bg-[#61CE70] px-5 py-3 text-sm font-semibold text-[#0a192f] transition hover:bg-white"
+          >
+            Create Ticket
+          </Link>
         </div>
       </div>
 
@@ -347,6 +575,7 @@ function TicketsPage() {
                 <tr className="text-left text-slate-600">
                   <th className="px-4 py-3 font-semibold">Ticket</th>
                   <th className="px-4 py-3 font-semibold">Reporter</th>
+                  <th className="px-4 py-3 font-semibold">Attachments</th>
                   <th className="px-4 py-3 font-semibold">Priority</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                   <th className="px-4 py-3 font-semibold">Assigned</th>
@@ -366,6 +595,28 @@ function TicketsPage() {
                     <td className="px-4 py-4">
                       <p className="text-slate-900">{ticket.reportedByUserName || "N/A"}</p>
                       <p className="text-xs text-slate-500 mt-1">{ticket.reportedByUserId || "No user ID"}</p>
+                    </td>
+                    <td className="px-4 py-4">
+                      {ticket.attachmentUrls?.length ? (
+                        <div className="flex items-center gap-2">
+                          {ticket.attachmentUrls.slice(0, 3).map((attachmentUrl, index) => (
+                            <button
+                              type="button"
+                              key={`${ticket.id}-attachment-${index}`}
+                              onClick={() => openImagePreview(attachmentUrl)}
+                              className="block h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-white"
+                            >
+                              <img
+                                src={attachmentUrl}
+                                alt={`Ticket ${ticket.id} attachment ${index + 1}`}
+                                className="h-full w-full object-cover"
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-500">No images</p>
+                      )}
                     </td>
                     <td className="px-4 py-4 font-medium text-slate-800">{ticket.priority || "MEDIUM"}</td>
                     <td className="px-4 py-4 font-medium text-slate-800">{ticket.status || "OPEN"}</td>
@@ -421,7 +672,7 @@ function TicketsPage() {
                             [ticket.id]: event.target.value,
                           }))
                         }
-                        placeholder="Reject reason"
+                        placeholder="Reject reason (at least 5 words)"
                         className="w-52 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-[#61CE70]"
                       />
                       <button
@@ -443,7 +694,7 @@ function TicketsPage() {
                             [ticket.id]: event.target.value,
                           }))
                         }
-                        placeholder="Close note (optional)"
+                        placeholder="Close reason (at least 5 words)"
                         className="w-52 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-[#61CE70]"
                       />
                       <button

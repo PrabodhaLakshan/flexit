@@ -20,6 +20,10 @@ function normalizeRole(value) {
     return "TECHNICIAN";
   }
 
+  if (role === "ADMIN") {
+    return "ADMIN";
+  }
+
   return "USER";
 }
 

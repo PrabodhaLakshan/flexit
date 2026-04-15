@@ -35,11 +35,29 @@ function TicketDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const basePath = location.pathname.startsWith("/admin") ? "/admin/tickets" : "/tickets";
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  const isTechnicianRoute = location.pathname.startsWith("/technician");
+  const basePath = isAdminRoute
+    ? "/admin/tickets"
+    : isTechnicianRoute
+      ? "/technician/tickets"
+      : "/tickets";
+  const backPath = isTechnicianRoute ? "/technician/dashboard" : basePath;
 
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const [previewOrigin, setPreviewOrigin] = useState({ x: 50, y: 50 });
+  const [previewTilt, setPreviewTilt] = useState({ x: 0, y: 0 });
+  const [previewLens, setPreviewLens] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    bgX: 50,
+    bgY: 50,
+  });
 
   const loadTicket = async () => {
     setLoading(true);
@@ -58,6 +76,115 @@ function TicketDetailsPage() {
   useEffect(() => {
     loadTicket();
   }, [id]);
+
+  useEffect(() => {
+    if (!previewImageUrl) {
+      return;
+    }
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setPreviewImageUrl("");
+        setPreviewZoom(1);
+        setPreviewOrigin({ x: 50, y: 50 });
+        setPreviewTilt({ x: 0, y: 0 });
+        setPreviewLens({ visible: false, x: 0, y: 0, bgX: 50, bgY: 50 });
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [previewImageUrl]);
+
+  const openImagePreview = (imageUrl) => {
+    setPreviewImageUrl(imageUrl);
+    setPreviewZoom(1);
+    setPreviewOrigin({ x: 50, y: 50 });
+    setPreviewTilt({ x: 0, y: 0 });
+    setPreviewLens({ visible: false, x: 0, y: 0, bgX: 50, bgY: 50 });
+  };
+
+  const closeImagePreview = () => {
+    setPreviewImageUrl("");
+    setPreviewZoom(1);
+    setPreviewOrigin({ x: 50, y: 50 });
+    setPreviewTilt({ x: 0, y: 0 });
+    setPreviewLens({ visible: false, x: 0, y: 0, bgX: 50, bgY: 50 });
+  };
+
+  const zoomInPreview = () => {
+    setPreviewZoom((previous) => Math.min(previous + 0.25, 4));
+  };
+
+  const zoomOutPreview = () => {
+    setPreviewZoom((previous) => Math.max(previous - 0.25, 0.5));
+  };
+
+  const resetPreviewZoom = () => {
+    setPreviewZoom(1);
+    setPreviewOrigin({ x: 50, y: 50 });
+    setPreviewTilt({ x: 0, y: 0 });
+    setPreviewLens((previous) => ({ ...previous, visible: false }));
+  };
+
+  const handlePreviewMouseMove = (event) => {
+    if (!isTechnicianRoute) {
+      return;
+    }
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const relativeX = (event.clientX - bounds.left) / bounds.width;
+    const relativeY = (event.clientY - bounds.top) / bounds.height;
+
+    const tiltY = (relativeX - 0.5) * 12;
+    const tiltX = (0.5 - relativeY) * 12;
+
+    setPreviewTilt({ x: tiltX, y: tiltY });
+  };
+
+  const handlePreviewMouseLeave = () => {
+    if (!isTechnicianRoute) {
+      return;
+    }
+
+    setPreviewTilt({ x: 0, y: 0 });
+  };
+
+  const handlePreviewWheelZoom = (event) => {
+    event.preventDefault();
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const relativeX = ((event.clientX - bounds.left) / bounds.width) * 100;
+    const relativeY = ((event.clientY - bounds.top) / bounds.height) * 100;
+    const nextOrigin = {
+      x: Math.min(100, Math.max(0, relativeX)),
+      y: Math.min(100, Math.max(0, relativeY)),
+    };
+
+    setPreviewOrigin(nextOrigin);
+    setPreviewZoom((previous) => {
+      const direction = event.deltaY < 0 ? 1 : -1;
+      const nextZoom = previous + direction * 0.2;
+      return Math.min(4, Math.max(0.5, nextZoom));
+    });
+  };
+
+  const handlePreviewImageClick = (event) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - bounds.left;
+    const clickY = event.clientY - bounds.top;
+
+    const relativeX = (clickX / bounds.width) * 100;
+    const relativeY = (clickY / bounds.height) * 100;
+
+    setPreviewLens({
+      visible: true,
+      x: clickX,
+      y: clickY,
+      bgX: Math.min(100, Math.max(0, relativeX)),
+      bgY: Math.min(100, Math.max(0, relativeY)),
+    });
+  };
 
   if (loading) {
     return (
@@ -89,6 +216,91 @@ function TicketDetailsPage() {
 
   return (
     <section className="space-y-6">
+      {previewImageUrl ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4">
+          <div className="absolute inset-0" onClick={closeImagePreview} />
+          <div className="relative z-10 w-full max-w-6xl rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-2xl">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-200">Image Preview</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={zoomOutPreview}
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-[#61CE70]"
+                >
+                  Zoom -
+                </button>
+                <button
+                  type="button"
+                  onClick={zoomInPreview}
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-[#61CE70]"
+                >
+                  Zoom +
+                </button>
+                <button
+                  type="button"
+                  onClick={resetPreviewZoom}
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-[#61CE70]"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={closeImagePreview}
+                  className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <p className="mb-3 text-xs text-slate-400">
+              Use mouse wheel to zoom in the area under the cursor. Click on the image to show a circular zoom lens around the clicked area.
+              {isTechnicianRoute ? " Move the mouse to see a 3D tilt effect in technician view." : ""}
+            </p>
+
+            <div
+              className="relative max-h-[75vh] overflow-auto rounded-xl border border-slate-700 bg-slate-950 p-3 cursor-crosshair"
+              onWheel={handlePreviewWheelZoom}
+              onClick={handlePreviewImageClick}
+              onMouseMove={handlePreviewMouseMove}
+              onMouseLeave={handlePreviewMouseLeave}
+            >
+              <img
+                src={previewImageUrl}
+                alt="Ticket attachment preview"
+                className="mx-auto origin-center select-none"
+                style={{
+                  transform: isTechnicianRoute
+                    ? `perspective(1200px) rotateX(${previewTilt.x}deg) rotateY(${previewTilt.y}deg) scale(${previewZoom})`
+                    : `scale(${previewZoom})`,
+                  transformOrigin: `${previewOrigin.x}% ${previewOrigin.y}%`,
+                  transition: "transform 0.15s ease, filter 0.15s ease",
+                  filter: isTechnicianRoute
+                    ? "drop-shadow(0 22px 30px rgba(0,0,0,0.45))"
+                    : "none",
+                }}
+              />
+
+              {previewLens.visible ? (
+                <div
+                  className="pointer-events-none absolute h-44 w-44 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-4 border-white/90 shadow-2xl ring-2 ring-slate-900/60"
+                  style={{
+                    left: `${previewLens.x}px`,
+                    top: `${previewLens.y}px`,
+                    backgroundImage: `url(${previewImageUrl})`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundColor: "#020617",
+                    backgroundSize: `${Math.max(220, previewZoom * 260)}%`,
+                    backgroundPosition: `${previewLens.bgX}% ${previewLens.bgY}%`,
+                  }}
+                />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -113,7 +325,7 @@ function TicketDetailsPage() {
 
           <div className="flex flex-wrap gap-2">
             <Link
-              to={basePath}
+              to={backPath}
               className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[#61CE70] hover:text-[#0a192f]"
             >
               Back
@@ -149,18 +361,24 @@ function TicketDetailsPage() {
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
             <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Attachments</h2>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {ticket.attachmentUrls?.length ? (
                 ticket.attachmentUrls.map((attachmentUrl, index) => (
-                  <a
+                  <button
+                    type="button"
                     key={`${attachmentUrl}-${index}`}
-                    href={attachmentUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-[#0a192f] transition hover:border-[#61CE70] hover:text-[#61CE70]"
+                    onClick={() => openImagePreview(attachmentUrl)}
+                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
                   >
-                    {attachmentUrl}
-                  </a>
+                    <img
+                      src={attachmentUrl}
+                      alt={`Attachment ${index + 1}`}
+                      className="h-40 w-full object-cover"
+                    />
+                    <span className="block border-t border-slate-200 px-3 py-2 text-xs font-semibold text-[#0a192f] transition">
+                      Click to preview
+                    </span>
+                  </button>
                 ))
               ) : (
                 <p className="text-sm text-slate-500">No attachments were added.</p>

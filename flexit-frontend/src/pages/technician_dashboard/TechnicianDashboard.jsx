@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { getAllTickets, updateTicketStatus } from "../../api/ticketApi";
 import { getSessionUser } from "../../utils/sessionUser";
 
@@ -163,6 +164,15 @@ function TechnicianDashboard() {
                         <p className="text-xs text-slate-500">Reporter</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.reportedByUserName || ticket.reportedByUserId || "Unknown"}</p>
                       </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <Link
+                        to={`/technician/tickets/${ticket.id}`}
+                        className="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[#61CE70] hover:text-[#0a192f]"
+                      >
+                        View Ticket Details & Images
+                      </Link>
                     </div>
                   </div>
 
