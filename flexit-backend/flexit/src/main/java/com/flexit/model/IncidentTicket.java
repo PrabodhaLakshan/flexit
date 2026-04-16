@@ -18,6 +18,10 @@ public class IncidentTicket {
     @NotBlank(message = "Title is required")
     private String title;
 
+    private String assetFacility;
+    private String location;
+    private String category;
+
     private String description;
 
     @NotNull(message = "Priority is required")
@@ -31,6 +35,8 @@ public class IncidentTicket {
 
     private String assignedTechnicianId;
     private String assignedTechnicianName;
+    private LocalDateTime assignedAt;
+    private LocalDateTime resolvedAt;
 
     @Size(max = 3, message = "Maximum 3 images allowed")
     private List<String> attachmentUrls = new ArrayList<>();
@@ -52,6 +58,15 @@ public class IncidentTicket {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    public String getAssetFacility() { return assetFacility; }
+    public void setAssetFacility(String assetFacility) { this.assetFacility = assetFacility; }
+
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
     public TicketPriority getPriority() { return priority; }
     public void setPriority(TicketPriority priority) { this.priority = priority; }
 
@@ -72,6 +87,12 @@ public class IncidentTicket {
 
     public String getAssignedTechnicianName() { return assignedTechnicianName; }
     public void setAssignedTechnicianName(String assignedTechnicianName) { this.assignedTechnicianName = assignedTechnicianName; }
+
+    public LocalDateTime getAssignedAt() { return assignedAt; }
+    public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
+
+    public LocalDateTime getResolvedAt() { return resolvedAt; }
+    public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
 
     public List<String> getAttachmentUrls() { return attachmentUrls; }
     public void setAttachmentUrls(List<String> attachmentUrls) { this.attachmentUrls = attachmentUrls; }

@@ -24,7 +24,7 @@ function UserNavbar() {
 
             <div className="hidden items-center gap-2 md:flex">
               <a
-                href="/dashboard"
+                href="/user/dashboard"
                 className="group relative rounded-full border border-transparent bg-gray-50 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:border-gray-200 hover:bg-white hover:text-[#61CE70] hover:shadow-md"
               >
                 My Dashboard

@@ -8,6 +8,8 @@ public class Comment {
     private String userId; 
     private String userName;
     private String text;
+    private String imageUrl;
+    private String role;
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public Comment() {
@@ -45,11 +47,27 @@ public class Comment {
         this.text = text;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

@@ -498,7 +498,7 @@ function TechnicianDashboard() {
               <select
                 value={priorityFilter}
                 onChange={(event) => setPriorityFilter(event.target.value)}
-                className="w-full rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none backdrop-blur transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
+                className="w-full rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-black outline-none backdrop-blur transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
               >
                 {priorityFilters.map((priority) => (
                   <option key={priority} value={priority}>
@@ -590,6 +590,10 @@ function TechnicianDashboard() {
                       <div className="rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-100">
                         <p className="text-xs text-slate-500">Category</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.category || "N/A"}</p>
+                      </div>
+                      <div className="rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-100">
+                        <p className="text-xs text-slate-500">Location</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.location || "N/A"}</p>
                       </div>
                       <div
                         className={`rounded-2xl border p-3 sm:col-span-2 xl:col-span-4 ${

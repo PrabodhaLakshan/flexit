@@ -26,6 +26,7 @@ function normalizeTicket(ticket) {
     ...ticket,
     assetFacility:
       ticket.assetFacility ?? ticket.asset_facility ?? ticket.assetFacilityName ?? ticket.asset ?? "",
+    location: ticket.location ?? ticket.ticketLocation ?? ticket.site ?? "",
     category: ticket.category ?? ticket.ticketCategory ?? ticket.issueCategory ?? "",
     attachmentUrls: normalizeAttachmentUrls(ticket),
   };

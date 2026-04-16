@@ -85,6 +85,10 @@ function TicketCard({ ticket, detailsPath, editPath }) {
           <dt className="font-medium text-slate-500">Created</dt>
           <dd className="mt-1 text-slate-900">{formatDate(ticket.createdAt)}</dd>
         </div>
+        <div>
+          <dt className="font-medium text-slate-500">Location</dt>
+          <dd className="mt-1 text-slate-900">{ticket.location || "N/A"}</dd>
+        </div>
       </dl>
     </article>
   );

@@ -21,7 +21,7 @@ function UserSidebar() {
         <div className="px-4 py-6">
           <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400">User Panel</h2>
           <nav className="relative flex-1 space-y-2">
-            <Link to="/dashboard" className={getLinkClasses("/dashboard")}> 
+            <Link to="/user/dashboard" className={getLinkClasses("/user/dashboard")}> 
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
               </svg>

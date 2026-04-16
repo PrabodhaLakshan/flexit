@@ -50,11 +50,6 @@ function TicketDetailsPage() {
       : "/tickets";
   const backPath = isTechnicianRoute ? "/technician/dashboard" : isUserRoute ? "/user/dashboard" : basePath;
   const canManageStatus = isAdminRoute || isTechnicianRoute;
-    const canEditTicket =
-      isUserRoute &&
-      ticket &&
-      ticket.reportedByUserId === sessionUser.userId &&
-      ["OPEN", "REJECTED"].includes(ticket.status || "OPEN");
 
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -70,6 +65,11 @@ function TicketDetailsPage() {
     bgX: 50,
     bgY: 50,
   });
+  const canEditTicket =
+    isUserRoute &&
+    ticket &&
+    ticket.reportedByUserId === sessionUser.userId &&
+    ["OPEN", "REJECTED"].includes(ticket.status || "OPEN");
 
   const loadTicket = async () => {
     setLoading(true);
@@ -387,6 +387,10 @@ function TicketDetailsPage() {
           <div className="rounded-2xl border border-cyan-100 bg-white/90 p-4 shadow-sm">
             <p className="text-sm text-slate-500">Category</p>
             <p className="mt-1 font-semibold text-slate-900">{ticket.category || "N/A"}</p>
+          </div>
+          <div className="rounded-2xl border border-cyan-100 bg-white/90 p-4 shadow-sm">
+            <p className="text-sm text-slate-500">Location</p>
+            <p className="mt-1 font-semibold text-slate-900">{ticket.location || "N/A"}</p>
           </div>
         </div>
 

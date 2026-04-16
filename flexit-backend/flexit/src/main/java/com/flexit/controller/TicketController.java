@@ -2,6 +2,7 @@ package com.flexit.controller;
 
 import com.flexit.model.Comment;
 import com.flexit.model.IncidentTicket;
+import com.flexit.model.TechnicianOption;
 import com.flexit.model.TicketStatus;
 import com.flexit.service.TicketService;
 import jakarta.validation.Valid;
@@ -28,6 +29,20 @@ public class TicketController {
         return new ResponseEntity<>(ticketService.createTicket(ticket), HttpStatus.CREATED);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<IncidentTicket> updateTicket(
+            @PathVariable String id,
+            @Valid @RequestBody IncidentTicket ticket,
+            @RequestParam String userId) {
+        return ResponseEntity.ok(ticketService.updateTicket(id, ticket, userId));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTicket(@PathVariable String id, @RequestParam String userId) {
+        ticketService.deleteTicket(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/with-files")
     public ResponseEntity<IncidentTicket> createTicketWithFiles(
             @RequestPart("ticket") @Valid IncidentTicket ticket,
@@ -38,6 +53,11 @@ public class TicketController {
     @GetMapping
     public ResponseEntity<List<IncidentTicket>> getAllTickets() {
         return ResponseEntity.ok(ticketService.getAllTickets());
+    }
+
+    @GetMapping("/technicians")
+    public ResponseEntity<List<TechnicianOption>> getAvailableTechnicians() {
+        return ResponseEntity.ok(ticketService.getAvailableTechnicians());
     }
 
     @GetMapping("/{id}")
@@ -60,12 +80,23 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.addComment(id, comment));
     }
 
+    @PutMapping("/{ticketId}/comments/{commentId}")
+    public ResponseEntity<IncidentTicket> updateComment(
+            @PathVariable String ticketId,
+            @PathVariable String commentId,
+            @RequestParam String userId,
+            @RequestParam(required = false) String userRole,
+            @RequestBody Comment comment) {
+        return ResponseEntity.ok(ticketService.updateComment(ticketId, commentId, comment, userId, userRole));
+    }
+
     @DeleteMapping("/{ticketId}/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable String ticketId,
             @PathVariable String commentId,
-            @RequestParam String userId) {
-        ticketService.deleteComment(ticketId, commentId, userId);
+            @RequestParam String userId,
+            @RequestParam(required = false) String userRole) {
+        ticketService.deleteComment(ticketId, commentId, userId, userRole);
         return ResponseEntity.noContent().build();
     }
 

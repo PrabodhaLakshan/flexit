@@ -196,6 +196,7 @@ function TicketsPage() {
       ticket.reportedByUserName || ticket.reportedByUserId || "Unknown",
       formatTechnicianLabel(ticket),
       ticket.assetFacility || "N/A",
+      ticket.location || "N/A",
       ticket.category || "N/A",
       ticket.priority || "MEDIUM",
       formatReportDate(ticket.createdAt),
@@ -204,7 +205,7 @@ function TicketsPage() {
 
     autoTable(doc, {
       startY: 35,
-      head: [["Ticket ID", "Title", "Reporter", "Assigned Technician", "Asset / Facility", "Category", "Priority", "Created At", "Resolution Notes"]],
+      head: [["Ticket ID", "Title", "Reporter", "Assigned Technician", "Asset / Facility", "Location", "Category", "Priority", "Created At", "Resolution Notes"]],
       body: rows,
       theme: "grid",
       styles: {
@@ -219,15 +220,16 @@ function TicketsPage() {
         fontStyle: "bold",
       },
       columnStyles: {
-        0: { cellWidth: 22 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 34 },
-        3: { cellWidth: 34 },
-        4: { cellWidth: 28 },
-        5: { cellWidth: 22 },
+        0: { cellWidth: 18 },
+        1: { cellWidth: 24 },
+        2: { cellWidth: 28 },
+        3: { cellWidth: 28 },
+        4: { cellWidth: 24 },
+        5: { cellWidth: 28 },
         6: { cellWidth: 18 },
-        7: { cellWidth: 28 },
-        8: { cellWidth: "auto" },
+        7: { cellWidth: 16 },
+        8: { cellWidth: 20 },
+        9: { cellWidth: "auto" },
       },
     });
 
@@ -374,6 +376,7 @@ function TicketsPage() {
           !searchTerm ||
           ticket.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           ticket.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ticket.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           ticket.reportedByUserName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           ticket.reportedByUserId?.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -561,10 +564,10 @@ function TicketsPage() {
     <section className="space-y-6">
       {popup ? (
         <div
-          className={`fixed right-6 top-6 z-60 rounded-2xl px-4 py-3 text-sm font-semibold shadow-xl transition-opacity ${
+          className={`fixed right-6 top-6 z-60 rounded-2xl px-4 py-3 text-sm font-semibold shadow-xl backdrop-blur transition-opacity ${
             popup.type === "success"
-              ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border border-rose-200 bg-rose-50 text-rose-800"
+              ? "border border-emerald-300 bg-emerald-50/95 text-emerald-800"
+              : "border border-rose-300 bg-rose-50/95 text-rose-800"
           }`}
         >
           {popup.message}
@@ -574,7 +577,7 @@ function TicketsPage() {
       {previewImageUrl ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4">
           <div className="absolute inset-0" onClick={closeImagePreview} />
-          <div className="relative z-10 h-190 w-295 max-h-[92vh] max-w-[96vw] rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-2xl">
+          <div className="relative z-10 h-190 w-295 max-h-[92vh] max-w-[96vw] rounded-2xl border border-cyan-300/30 bg-linear-to-br from-slate-900 via-slate-950 to-[#041727] p-4 shadow-2xl">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-200">Image Preview</p>
               <div className="flex flex-wrap items-center gap-2">
@@ -647,8 +650,10 @@ function TicketsPage() {
         </div>
       ) : null}
 
-      <div className="rounded-3xl border border-slate-200 bg-linear-to-r from-slate-950 via-slate-900 to-[#0a192f] p-6 text-white shadow-xl sm:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="relative overflow-hidden rounded-3xl border border-cyan-200/40 bg-linear-to-r from-slate-950 via-slate-900 to-[#0a192f] p-6 text-white shadow-2xl sm:p-8">
+        <div className="pointer-events-none absolute -top-20 -right-16 h-44 w-44 rounded-full bg-cyan-300/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-44 w-44 rounded-full bg-emerald-300/20 blur-3xl" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#61CE70]">Ticket Management</p>
             <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">All Tickets Table</h1>
@@ -659,7 +664,7 @@ function TicketsPage() {
           <button
             type="button"
             onClick={handleGenerateResolvedReport}
-            className="inline-flex items-center justify-center rounded-2xl bg-[#61CE70] px-5 py-3 text-sm font-semibold text-[#0a192f] transition hover:bg-white"
+            className="inline-flex items-center justify-center rounded-2xl bg-linear-to-r from-[#61CE70] to-cyan-300 px-5 py-3 text-sm font-semibold text-[#0a192f] shadow-lg transition hover:-translate-y-0.5 hover:from-white hover:to-[#c6ffd4]"
           >
             Generate PDF Report
           </button>
@@ -667,37 +672,37 @@ function TicketsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-slate-500">Open</p>
+        <div className="rounded-2xl border border-amber-200 bg-linear-to-br from-amber-50 to-white p-4 shadow-sm">
+          <p className="text-sm text-amber-700">Open</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900">{counts.OPEN}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-slate-500">In progress</p>
+        <div className="rounded-2xl border border-sky-200 bg-linear-to-br from-sky-50 to-white p-4 shadow-sm">
+          <p className="text-sm text-sky-700">In progress</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900">{counts.IN_PROGRESS}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-slate-500">Resolved</p>
+        <div className="rounded-2xl border border-emerald-200 bg-linear-to-br from-emerald-50 to-white p-4 shadow-sm">
+          <p className="text-sm text-emerald-700">Resolved</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900">{counts.RESOLVED}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-slate-500">Rejected</p>
+        <div className="rounded-2xl border border-rose-200 bg-linear-to-br from-rose-50 to-white p-4 shadow-sm">
+          <p className="text-sm text-rose-700">Rejected</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900">{counts.REJECTED}</p>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl border border-cyan-200 bg-linear-to-br from-cyan-50 via-white to-emerald-50 p-5 shadow-lg">
         <div className="grid gap-4 lg:grid-cols-3">
           <input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search by title, description, or reporter"
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-[#61CE70] focus:bg-white focus:ring-4 focus:ring-[#61CE70]/15 lg:col-span-1"
+            className="w-full rounded-2xl border border-cyan-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-200/40 lg:col-span-1"
           />
 
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-[#61CE70] focus:bg-white focus:ring-4 focus:ring-[#61CE70]/15"
+            className="w-full rounded-2xl border border-cyan-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-200/40"
           >
             {statusFilters.map((status) => (
               <option key={status} value={status}>
@@ -709,7 +714,7 @@ function TicketsPage() {
           <select
             value={priorityFilter}
             onChange={(event) => setPriorityFilter(event.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-[#61CE70] focus:bg-white focus:ring-4 focus:ring-[#61CE70]/15"
+            className="w-full rounded-2xl border border-cyan-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-200/40"
           >
             {priorityFilters.map((priority) => (
               <option key={priority} value={priority}>
@@ -723,14 +728,14 @@ function TicketsPage() {
           <button
             type="button"
             onClick={loadTickets}
-            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-[#61CE70] hover:text-[#0a192f]"
+            className="rounded-full border border-cyan-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:-translate-y-0.5 hover:border-cyan-500 hover:text-[#0a192f]"
           >
             Refresh
           </button>
-          <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600">
+          <span className="rounded-full border border-cyan-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">
             {filteredTickets.length} ticket{filteredTickets.length === 1 ? "" : "s"} shown
           </span>
-          <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600">
+          <span className="rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">
             {technicianOptions.length} technician option{technicianOptions.length === 1 ? "" : "s"}
           </span>
         </div>
@@ -749,19 +754,19 @@ function TicketsPage() {
       </div>
 
       {loading ? (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+        <div className="rounded-3xl border border-dashed border-cyan-300 bg-linear-to-br from-cyan-50 to-emerald-50 p-10 text-center text-slate-600 shadow-sm">
           Loading tickets...
         </div>
       ) : error ? (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-800 shadow-sm">
+        <div className="rounded-3xl border border-rose-300 bg-linear-to-br from-rose-50 to-orange-50 p-6 text-rose-800 shadow-sm">
           <p className="font-semibold">Unable to load tickets</p>
           <p className="mt-1 text-sm">{error}</p>
         </div>
       ) : filteredTickets.length ? (
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-lg">
           <div className="overflow-x-auto">
             <table className="min-w-325 w-full text-sm">
-              <thead className="bg-slate-50">
+              <thead className="bg-linear-to-r from-cyan-50 to-emerald-50">
                 <tr className="text-left text-slate-600">
                   <th className="px-4 py-3 font-semibold">Ticket</th>
                   <th className="px-4 py-3 font-semibold">Reporter</th>
@@ -777,13 +782,13 @@ function TicketsPage() {
               </thead>
               <tbody>
                 {filteredTickets.map((ticket) => (
-                  <tr key={ticket.id} className="border-t border-slate-100 align-top">
+                  <tr key={ticket.id} className="border-t border-slate-100 align-top transition hover:bg-cyan-50/50">
                     <td className="px-4 py-4">
                       <p className="font-semibold text-slate-900">{ticket.title}</p>
                       <p className="text-xs text-slate-500 mt-1">ID: {ticket.id}</p>
                       <Link
                         to={`/admin/tickets/${ticket.id}`}
-                        className="mt-3 inline-flex rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-[#61CE70] hover:text-[#0a192f]"
+                        className="mt-3 inline-flex rounded-xl border border-cyan-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-500 hover:text-[#0a192f]"
                       >
                         View Image and Details
                       </Link>
@@ -821,7 +826,7 @@ function TicketsPage() {
                             [ticket.id]: event.target.value,
                           }))
                         }
-                        className="w-44 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-[#61CE70]"
+                        className="w-44 rounded-xl border border-cyan-200 bg-white px-3 py-2 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/40"
                       >
                         <option value="">Select Technician</option>
                         {technicianOptions.map((tech) => (
@@ -839,13 +844,13 @@ function TicketsPage() {
                           }))
                         }
                         placeholder="or type tech ID"
-                        className="w-44 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs outline-none focus:border-[#61CE70]"
+                        className="w-44 rounded-xl border border-cyan-200 bg-white px-3 py-2 text-xs outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/40"
                       />
                       <button
                         type="button"
                         onClick={() => handleAssign(ticket)}
                         disabled={isActionLoading(ticket.id)}
-                        className="block rounded-xl bg-[#0a192f] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#61CE70] hover:text-[#0a192f] disabled:opacity-60"
+                        className="block rounded-xl bg-linear-to-r from-[#0a192f] to-cyan-700 px-3 py-2 text-xs font-semibold text-white transition hover:-translate-y-0.5 hover:from-[#0a192f] hover:to-[#61CE70] hover:text-[#0a192f] disabled:opacity-60"
                       >
                         {isActionLoading(ticket.id) ? "Working..." : "Assign"}
                       </button>
@@ -861,7 +866,7 @@ function TicketsPage() {
                           }))
                         }
                         placeholder="Reject reason (at least 5 words)"
-                        className="w-52 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-[#61CE70]"
+                        className="w-52 rounded-xl border border-rose-200 bg-rose-50/40 px-3 py-2 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-200/40"
                       />
                       <button
                         type="button"
@@ -883,7 +888,7 @@ function TicketsPage() {
                           }))
                         }
                         placeholder="Close reason (at least 5 words)"
-                        className="w-52 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-[#61CE70]"
+                        className="w-52 rounded-xl border border-emerald-200 bg-emerald-50/40 px-3 py-2 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/40"
                       />
                       <button
                         type="button"
@@ -901,7 +906,7 @@ function TicketsPage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500 shadow-sm">
+        <div className="rounded-3xl border border-dashed border-cyan-300 bg-linear-to-br from-cyan-50 to-emerald-50 p-10 text-center text-slate-600 shadow-sm">
           <p className="text-lg font-semibold text-slate-900">No tickets match the current filters.</p>
           <p className="mt-2 text-sm">Try clearing the search fields or create a new ticket.</p>
         </div>
