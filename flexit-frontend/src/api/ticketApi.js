@@ -134,10 +134,11 @@ export function addComment(ticketId, comment) {
   return request(`${BASE_URL}/${ticketId}/comments`, buildOptions("POST", comment));
 }
 
-export function updateComment(ticketId, commentId, comment, userId) {
+export function updateComment(ticketId, commentId, comment, userId, userRole) {
   const params = new URLSearchParams();
 
   if (userId) params.set("userId", userId);
+  if (userRole) params.set("userRole", userRole);
 
   return request(
     `${BASE_URL}/${ticketId}/comments/${commentId}?${params.toString()}`,
@@ -145,10 +146,11 @@ export function updateComment(ticketId, commentId, comment, userId) {
   );
 }
 
-export function deleteComment(ticketId, commentId, userId) {
+export function deleteComment(ticketId, commentId, userId, userRole) {
   const params = new URLSearchParams();
 
   if (userId) params.set("userId", userId);
+  if (userRole) params.set("userRole", userRole);
 
   return request(
     `${BASE_URL}/${ticketId}/comments/${commentId}?${params.toString()}`,

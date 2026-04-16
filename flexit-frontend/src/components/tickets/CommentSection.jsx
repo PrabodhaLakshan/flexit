@@ -31,6 +31,7 @@ function CommentSection({ ticketId, comments = [], onRefresh }) {
 
   const currentUserId = sessionUser.userId || formData.userId.trim();
   const currentUserName = sessionUser.userName || formData.userName.trim();
+  const currentUserRole = sessionUser.role || "USER";
   const canUseSessionIdentity = Boolean(sessionUser.userId);
 
   const loadComments = async () => {
@@ -116,6 +117,7 @@ function CommentSection({ ticketId, comments = [], onRefresh }) {
         userName: currentUserName,
         text: formData.text.trim(),
         imageUrl: imageDataUrl,
+        role: currentUserRole,
       });
 
       setFormData((previous) => ({
@@ -146,7 +148,7 @@ function CommentSection({ ticketId, comments = [], onRefresh }) {
     setError("");
 
     try {
-      await deleteComment(ticketId, commentId, currentUserId);
+      await deleteComment(ticketId, commentId, currentUserId, currentUserRole);
 
       await loadComments();
 
@@ -193,8 +195,10 @@ function CommentSection({ ticketId, comments = [], onRefresh }) {
           userId: currentUserId,
           userName: currentUserName,
           text: editingText.trim(),
+          role: currentUserRole,
         },
-        currentUserId
+        currentUserId,
+        currentUserRole
       );
 
       handleCancelEdit();
@@ -211,7 +215,10 @@ function CommentSection({ ticketId, comments = [], onRefresh }) {
     }
   };
 
-  const canModifyComment = (comment) => currentUserId && comment.userId === currentUserId;
+  const canModifyComment = (comment) =>
+    currentUserId &&
+    comment.userId === currentUserId &&
+    comment.role === currentUserRole;
 
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -311,7 +318,14 @@ function CommentSection({ ticketId, comments = [], onRefresh }) {
             <article key={comment.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-slate-900">{comment.userName || comment.userId || "Anonymous"}</p>
+                  <p className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
+                    <span>{comment.userName || comment.userId || "Anonymous"}</span>
+                    {comment.role ? (
+                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+                        {comment.role}
+                      </span>
+                    ) : null}
+                  </p>
                   <p className="text-xs text-slate-500">{formatDate(comment.createdAt)}</p>
                 </div>
 

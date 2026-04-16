@@ -50,13 +50,15 @@ export function getSessionUser() {
 
   const params = new URLSearchParams(window.location.search);
   const role = normalizeRole(params.get("role") || merged.role || "");
-  const userId = firstNonEmpty([
-    params.get("userId"),
-    params.get("techId"),
-    merged.userId,
-    merged.id,
-    merged.techId,
-  ]);
+  const userIdCandidates = [params.get("userId"), merged.userId, merged.id];
+
+  // Only technician sessions should resolve identity from techId values.
+  if (role === "TECHNICIAN") {
+    userIdCandidates.splice(1, 0, params.get("techId"));
+    userIdCandidates.push(merged.techId);
+  }
+
+  const userId = firstNonEmpty(userIdCandidates);
   const userName = firstNonEmpty([params.get("userName"), merged.userName, merged.name]);
 
   return {

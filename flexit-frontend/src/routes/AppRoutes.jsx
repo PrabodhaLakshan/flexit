@@ -10,6 +10,7 @@ import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
 import TicketsPage from "../pages/tickets/TicketsPage";
 import CreateTicketPage from "../pages/tickets/CreateTicketPage";
 import PublicCreateTicketPage from "../pages/tickets/PublicCreateTicketPage";
+import TicketEditPage from "../pages/tickets/TicketEditPage";
 import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
 import EditTicketPage from "../pages/tickets/EditTicketPage";
 import UserDashboard from "../pages/user_dashboard/UserDashboard";
@@ -51,6 +52,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/report-ticket" element={<PublicCreateTicketPage />} />
+        <Route path="/report-ticket/manage/:id" element={<TicketEditPage />} />
         <Route path="/" element={landingPage} />
 
         <Route element={<RequireAuth />}>
@@ -59,6 +61,7 @@ function AppRoutes() {
               <Route path="/user/dashboard" element={<UserDashboard />} />
               <Route path="/user/tickets/create" element={<CreateTicketPage />} />
               <Route path="/user/tickets/:id" element={<TicketDetailsPage />} />
+              <Route path="/user/tickets/edit/:id" element={<TicketEditPage />} />
             </Route>
           </Route>
 

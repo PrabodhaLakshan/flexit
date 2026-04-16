@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { getTicketById } from "../../api/ticketApi";
 import CommentSection from "../../components/tickets/CommentSection";
+import { getSessionUser } from "../../utils/sessionUser";
 
 const statusStyles = {
   OPEN: "bg-amber-500/15 text-amber-700 border-amber-200",
@@ -35,6 +36,7 @@ function TicketDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const sessionUser = getSessionUser();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isUserRoute = location.pathname.startsWith("/user");
   const isTechnicianRoute = location.pathname.startsWith("/technician");
@@ -48,6 +50,11 @@ function TicketDetailsPage() {
       : "/tickets";
   const backPath = isTechnicianRoute ? "/technician/dashboard" : isUserRoute ? "/user/dashboard" : basePath;
   const canManageStatus = isAdminRoute || isTechnicianRoute;
+    const canEditTicket =
+      isUserRoute &&
+      ticket &&
+      ticket.reportedByUserId === sessionUser.userId &&
+      ["OPEN", "REJECTED"].includes(ticket.status || "OPEN");
 
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -335,6 +342,14 @@ function TicketDetailsPage() {
             >
               Back
             </Link>
+            {canEditTicket ? (
+              <Link
+                to={`/user/tickets/edit/${ticket.id}`}
+                className="rounded-2xl bg-[#0a192f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#61CE70] hover:text-[#0a192f]"
+              >
+                Edit Ticket
+              </Link>
+            ) : null}
             {canManageStatus ? (
               <Link
                 to={`${basePath}/edit/${ticket.id}`}
