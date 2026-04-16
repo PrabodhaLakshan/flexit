@@ -8,6 +8,7 @@ import { getSessionUser } from "../../utils/sessionUser";
 const allowedStatuses = ["IN_PROGRESS", "RESOLVED"];
 const priorityFilters = ["ALL", "LOW", "MEDIUM", "HIGH"];
 const RESOLVED_REPORT_CACHE_KEY = "technicianResolvedReportCache";
+const HIDDEN_RESOLVED_IDS_KEY = "technicianHiddenResolvedIds";
 
 function formatDate(value) {
   if (!value) {
@@ -36,6 +37,72 @@ function getLatestTechnicianComment(ticket, technicianId) {
     .sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0))[0] || null;
 }
 
+function getResolutionCompletedAt(ticket, technicianId) {
+  return ticket?.resolvedAt || null;
+}
+
+function getElapsedMinutes(startValue, endValue) {
+  const startMs = new Date(startValue || 0).getTime();
+  const endMs = new Date(endValue || 0).getTime();
+
+  if (!startMs || !endMs || Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) {
+    return null;
+  }
+
+  return Math.floor((endMs - startMs) / (1000 * 60));
+}
+
+function formatDurationMinutes(totalMinutes) {
+  if (typeof totalMinutes !== "number" || totalMinutes < 0) {
+    return "N/A";
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${minutes}m`;
+}
+
+function getSlaTimerMeta(ticket, nowMs, technicianId) {
+  const isResolved = (ticket?.status || "OPEN") === "RESOLVED";
+  const startValue = ticket?.assignedAt || ticket?.createdAt;
+  const endValue = isResolved ? getResolutionCompletedAt(ticket, technicianId) : nowMs;
+  const elapsedMinutes = getElapsedMinutes(startValue, endValue);
+  const isBreached =
+    (ticket?.status || "OPEN") === "IN_PROGRESS" &&
+    typeof elapsedMinutes === "number" &&
+    elapsedMinutes > 4 * 60;
+
+  return {
+    isResolved,
+    isBreached,
+    label: isResolved
+      ? `Total Resolution Time: ${formatDurationMinutes(elapsedMinutes)}`
+      : `Time Since Assigned: ${formatDurationMinutes(elapsedMinutes)}`,
+  };
+}
+
+function calculateAverageResolutionHours(resolvedTickets, technicianId) {
+  const durations = (Array.isArray(resolvedTickets) ? resolvedTickets : [])
+    .map((ticket) => {
+      const start = new Date(ticket?.assignedAt || ticket?.createdAt || 0).getTime();
+      const end = new Date(ticket?.resolvedAt || 0).getTime();
+
+      if (!start || !end || Number.isNaN(start) || Number.isNaN(end) || end < start) {
+        return null;
+      }
+
+      return (end - start) / (1000 * 60 * 60);
+    })
+    .filter((value) => typeof value === "number");
+
+  if (!durations.length) {
+    return "N/A";
+  }
+
+  const averageHours = durations.reduce((sum, value) => sum + value, 0) / durations.length;
+  return `${averageHours.toFixed(1)} hrs`;
+}
+
 function readResolvedCache(technicianId) {
   try {
     const raw = window.localStorage.getItem(RESOLVED_REPORT_CACHE_KEY);
@@ -62,6 +129,37 @@ function writeResolvedCache(technicianId, tickets) {
     window.localStorage.setItem(RESOLVED_REPORT_CACHE_KEY, JSON.stringify(parsed));
   } catch {
     // Ignore cache write issues and keep dashboard functional.
+  }
+}
+
+function readHiddenResolvedIds(technicianId) {
+  try {
+    const raw = window.localStorage.getItem(HIDDEN_RESOLVED_IDS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    const key = (technicianId || "").trim();
+    const hidden = key ? parsed[key] : [];
+    return Array.isArray(hidden) ? hidden : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeHiddenResolvedIds(technicianId, ids) {
+  try {
+    const raw = window.localStorage.getItem(HIDDEN_RESOLVED_IDS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    const key = (technicianId || "").trim();
+
+    if (!key) {
+      return;
+    }
+
+    const previous = Array.isArray(parsed[key]) ? parsed[key] : [];
+    const merged = Array.from(new Set([...previous, ...(Array.isArray(ids) ? ids : [])]));
+    parsed[key] = merged;
+    window.localStorage.setItem(HIDDEN_RESOLVED_IDS_KEY, JSON.stringify(parsed));
+  } catch {
+    // Ignore storage issues and keep dashboard usable.
   }
 }
 
@@ -96,11 +194,25 @@ function TechnicianDashboard() {
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [formByTicket, setFormByTicket] = useState({});
   const [priorityFilter, setPriorityFilter] = useState("ALL");
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const [resolvedHistory, setResolvedHistory] = useState([]);
+  const [analytics, setAnalytics] = useState({
+    totalResolved: 0,
+    pendingTasks: 0,
+    averageResolutionTime: "N/A",
+  });
 
   useEffect(() => {
     setResolvedHistory(readResolvedCache(sessionUser.userId));
   }, [sessionUser.userId]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 60_000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   const loadAssignedTickets = async () => {
     setLoading(true);
@@ -108,10 +220,29 @@ function TechnicianDashboard() {
 
     try {
       const allTickets = await getAllTickets();
-      const assignedTickets = (Array.isArray(allTickets) ? allTickets : []).filter(
-        (ticket) =>
-          (ticket.assignedTechnicianId || "").trim() === sessionUser.userId.trim()
+      const hiddenResolvedIds = new Set(readHiddenResolvedIds(sessionUser.userId));
+      const assignedToCurrentTech = (Array.isArray(allTickets) ? allTickets : []).filter(
+        (ticket) => (ticket.assignedTechnicianId || "").trim() === sessionUser.userId.trim()
       );
+
+      const assignedTickets = (Array.isArray(allTickets) ? allTickets : []).filter(
+        (ticket) => {
+          const isAssignedToCurrentTech = (ticket.assignedTechnicianId || "").trim() === sessionUser.userId.trim();
+          const isHiddenResolved = (ticket.status || "OPEN") === "RESOLVED" && hiddenResolvedIds.has(ticket.id);
+          return isAssignedToCurrentTech && !isHiddenResolved;
+        }
+      );
+
+      const resolvedTickets = assignedToCurrentTech.filter((ticket) => (ticket.status || "OPEN") === "RESOLVED");
+      const pendingTasks = assignedToCurrentTech.filter(
+        (ticket) => !["RESOLVED", "REJECTED"].includes(ticket.status || "OPEN")
+      );
+
+      setAnalytics({
+        totalResolved: resolvedTickets.length,
+        pendingTasks: pendingTasks.length,
+        averageResolutionTime: calculateAverageResolutionHours(resolvedTickets, sessionUser.userId),
+      });
 
       setTickets(assignedTickets);
 
@@ -232,7 +363,7 @@ function TechnicianDashboard() {
           ticket.id || "N/A",
           ticket.title || "N/A",
           ticket.priority || "MEDIUM",
-          formatDate(latestComment?.createdAt || ticket.resolvedAt || ticket.createdAt),
+          formatDate(ticket.resolvedAt || ticket.createdAt),
           latestComment?.text || ticket.resolutionNotes || "No completion note provided.",
         ];
       }),
@@ -277,7 +408,7 @@ function TechnicianDashboard() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       const sectionLines = [
-        `Completed at: ${formatDate(latestComment?.createdAt || ticket.resolvedAt || ticket.createdAt)}`,
+        `Completed at: ${formatDate(ticket.resolvedAt || ticket.createdAt)}`,
         `Assigned technician: ${ticket.assignedTechnicianName || ticket.assignedTechnicianId || "Unassigned"}`,
         `Work done: ${completionNote}`,
       ];
@@ -307,7 +438,20 @@ function TechnicianDashboard() {
     });
 
     doc.save(fileName);
-    setMessage(`PDF report downloaded for ${resolvedTickets.length} resolved ticket${resolvedTickets.length === 1 ? "" : "s"}.`);
+    const downloadedResolvedIds = resolvedTickets.map((ticket) => ticket.id).filter(Boolean);
+
+    if (downloadedResolvedIds.length) {
+      writeHiddenResolvedIds(sessionUser.userId, downloadedResolvedIds);
+      setTickets((previous) =>
+        previous.filter(
+          (ticket) => !((ticket.status || "OPEN") === "RESOLVED" && downloadedResolvedIds.includes(ticket.id))
+        )
+      );
+      setResolvedHistory([]);
+      writeResolvedCache(sessionUser.userId, []);
+    }
+
+    setMessage(`PDF report downloaded and ${resolvedTickets.length} resolved ticket${resolvedTickets.length === 1 ? "" : "s"} removed from dashboard.`);
     setError("");
   };
 
@@ -370,6 +514,24 @@ function TechnicianDashboard() {
         </div>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total Resolved</p>
+          <p className="mt-2 text-3xl font-semibold text-[#0a192f]">{analytics.totalResolved}</p>
+          <p className="mt-1 text-sm text-slate-500">Completed tasks so far</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Pending Tasks</p>
+          <p className="mt-2 text-3xl font-semibold text-[#0a192f]">{analytics.pendingTasks}</p>
+          <p className="mt-1 text-sm text-slate-500">Currently open or in progress</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Average Resolution Time</p>
+          <p className="mt-2 text-3xl font-semibold text-[#0a192f]">{analytics.averageResolutionTime}</p>
+          <p className="mt-1 text-sm text-slate-500">From created time to completion</p>
+        </div>
+      </div>
+
       {message ? (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
           {message}
@@ -390,6 +552,7 @@ function TechnicianDashboard() {
         <div className="space-y-4">
           {filteredTickets.map((ticket) => {
             const form = formByTicket[ticket.id] || { status: "IN_PROGRESS", notes: "" };
+            const slaMeta = getSlaTimerMeta(ticket, nowMs, sessionUser.userId);
 
             return (
               <article key={ticket.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -419,6 +582,38 @@ function TechnicianDashboard() {
                       <div className="rounded-xl bg-slate-50 p-3">
                         <p className="text-xs text-slate-500">Category</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.category || "N/A"}</p>
+                      </div>
+                      <div
+                        className={`rounded-xl border p-3 sm:col-span-2 xl:col-span-4 ${
+                          slaMeta.isResolved
+                            ? "border-emerald-200 bg-emerald-50"
+                            : slaMeta.isBreached
+                              ? "border-rose-200 bg-rose-50"
+                              : "border-slate-200 bg-slate-50"
+                        }`}
+                      >
+                        <p
+                          className={`text-xs font-semibold uppercase tracking-[0.15em] ${
+                            slaMeta.isResolved
+                              ? "text-emerald-700"
+                              : slaMeta.isBreached
+                                ? "text-rose-700"
+                                : "text-slate-600"
+                          }`}
+                        >
+                          SLA Timer
+                        </p>
+                        <p
+                          className={`mt-1 text-sm font-semibold ${
+                            slaMeta.isResolved
+                              ? "text-emerald-900"
+                              : slaMeta.isBreached
+                                ? "text-rose-700"
+                                : "text-slate-900"
+                          }`}
+                        >
+                          {slaMeta.label}
+                        </p>
                       </div>
                     </div>
 
