@@ -28,7 +28,6 @@ function CommentSection({ ticketId, comments = [], onRefresh }) {
 
   const currentUserId = sessionUser.userId || formData.userId.trim();
   const currentUserName = sessionUser.userName || formData.userName.trim();
-  const canCreateComment = sessionUser.role === "USER";
   const canUseSessionIdentity = Boolean(sessionUser.userId);
 
   const loadComments = async () => {
@@ -191,57 +190,51 @@ function CommentSection({ ticketId, comments = [], onRefresh }) {
         </div>
       ) : null}
 
-      {canCreateComment ? (
-        <form onSubmit={handleAddComment} className="mt-6 space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-          {canUseSessionIdentity ? (
-            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-              Commenting as <span className="font-semibold text-slate-900">{currentUserName || "User"}</span>
-              <span className="ml-2 text-xs text-slate-500">({currentUserId})</span>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              <input
-                name="userId"
-                value={formData.userId}
-                onChange={handleChange}
-                placeholder="Your user ID"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
-              />
-              <input
-                name="userName"
-                value={formData.userName}
-                onChange={handleChange}
-                placeholder="Your name"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
-              />
-            </div>
-          )}
-
-          <textarea
-            name="text"
-            value={formData.text}
-            onChange={handleChange}
-            rows={4}
-            required
-            placeholder="Add a note, progress update, or a follow-up question"
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
-          />
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-2xl bg-[#0a192f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#61CE70] hover:text-[#0a192f] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "Saving..." : "Add Comment"}
-            </button>
+      <form onSubmit={handleAddComment} className="mt-6 space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+        {canUseSessionIdentity ? (
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+            Commenting as <span className="font-semibold text-slate-900">{currentUserName || "User"}</span>
+            <span className="ml-2 text-xs text-slate-500">({currentUserId})</span>
           </div>
-        </form>
-      ) : (
-        <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-          Comments can be viewed here. Only the user who raised the ticket can add a new comment.
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            <input
+              name="userId"
+              value={formData.userId}
+              onChange={handleChange}
+              placeholder="Your user ID"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
+            />
+            <input
+              name="userName"
+              value={formData.userName}
+              onChange={handleChange}
+              placeholder="Your name"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
+            />
+          </div>
+        )}
+
+        <textarea
+          name="text"
+          value={formData.text}
+          onChange={handleChange}
+          rows={4}
+          required
+          placeholder="Add a note, progress update, or a follow-up question"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
+        />
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-2xl bg-[#0a192f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#61CE70] hover:text-[#0a192f] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Saving..." : "Add Comment"}
+          </button>
         </div>
-      )}
+      </form>
 
       <div className="mt-6 space-y-4">
         {commentsLoading ? (

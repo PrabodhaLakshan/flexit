@@ -38,6 +38,7 @@ function TicketDetailsPage() {
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isUserRoute = location.pathname.startsWith("/user");
   const isTechnicianRoute = location.pathname.startsWith("/technician");
+  const canUse3DEffect = isTechnicianRoute || isAdminRoute;
   const basePath = isAdminRoute
     ? "/admin/tickets"
     : isUserRoute
@@ -132,7 +133,7 @@ function TicketDetailsPage() {
   };
 
   const handlePreviewMouseMove = (event) => {
-    if (!isTechnicianRoute) {
+    if (!canUse3DEffect) {
       return;
     }
 
@@ -147,7 +148,7 @@ function TicketDetailsPage() {
   };
 
   const handlePreviewMouseLeave = () => {
-    if (!isTechnicianRoute) {
+    if (!canUse3DEffect) {
       return;
     }
 
@@ -260,7 +261,7 @@ function TicketDetailsPage() {
 
             <p className="mb-3 text-xs text-slate-400">
               Use mouse wheel to zoom in the area under the cursor. Click on the image to show a circular zoom lens around the clicked area.
-              {isTechnicianRoute ? " Move the mouse to see a 3D tilt effect in technician view." : ""}
+              {canUse3DEffect ? " Move the mouse to see a 3D tilt effect." : ""}
             </p>
 
             <div
@@ -275,12 +276,12 @@ function TicketDetailsPage() {
                 alt="Ticket attachment preview"
                 className="mx-auto h-165 w-260 max-h-[78vh] max-w-full origin-center select-none object-contain"
                 style={{
-                  transform: isTechnicianRoute
+                  transform: canUse3DEffect
                     ? `perspective(1200px) rotateX(${previewTilt.x}deg) rotateY(${previewTilt.y}deg) scale(${previewZoom})`
                     : `scale(${previewZoom})`,
                   transformOrigin: `${previewOrigin.x}% ${previewOrigin.y}%`,
                   transition: "transform 0.15s ease, filter 0.15s ease",
-                  filter: isTechnicianRoute
+                  filter: canUse3DEffect
                     ? "drop-shadow(0 22px 30px rgba(0,0,0,0.45))"
                     : "none",
                 }}

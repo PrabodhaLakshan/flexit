@@ -88,8 +88,14 @@ function TechnicianDashboard() {
         techId: sessionUser.userId,
       });
 
-      setMessage(`Ticket ${ticket.id} updated to ${form.status}.`);
-      await loadAssignedTickets();
+      // If RESOLVED, remove immediately from display and show completion message
+      if (form.status === "RESOLVED") {
+        setTickets((prev) => prev.filter((t) => t.id !== ticket.id));
+        setMessage(`✓ Ticket ${ticket.id} marked as DONE and removed from your dashboard.`);
+      } else {
+        setMessage(`Ticket ${ticket.id} updated to ${form.status}.`);
+        await loadAssignedTickets();
+      }
     } catch (submitError) {
       setError(submitError.message || "Unable to update ticket status.");
     } finally {

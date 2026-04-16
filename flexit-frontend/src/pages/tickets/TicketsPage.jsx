@@ -1,9 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { assignTechnician, getAllTickets, getTechnicians, updateTicketStatus } from "../../api/ticketApi";
 
 const statusFilters = ["ALL", "OPEN", "IN_PROGRESS", "RESOLVED", "REJECTED"];
 const priorityFilters = ["ALL", "LOW", "MEDIUM", "HIGH", "URGENT"];
+
+function formatReportDate(value) {
+  if (!value) {
+    return "N/A";
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(date);
+}
 
 function extractTechniciansFromTickets(tickets) {
   const seen = new Set();
@@ -49,7 +65,6 @@ function TicketsPage() {
     bgX: 50,
     bgY: 50,
   });
-  const createTicketPath = "/admin/tickets/create";
 
   const countWords = (value) => {
     const text = (value || "").trim();
@@ -65,6 +80,79 @@ function TicketsPage() {
     window.setTimeout(() => {
       setPopup(null);
     }, 2800);
+  };
+
+  const handleGenerateResolvedReport = () => {
+    const resolvedTickets = tickets.filter((ticket) => (ticket.status || "OPEN") === "RESOLVED");
+
+    if (!resolvedTickets.length) {
+      const message = "No resolved tickets are available to include in the report.";
+      setActionError(message);
+      showPopup("error", message);
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const fileName = `resolved_tickets_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Resolved Tickets Report", 14, 16);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Generated on: ${formatReportDate(new Date())}`, 14, 23);
+    doc.text(`Total resolved tickets: ${resolvedTickets.length}`, 14, 29);
+
+    const rows = resolvedTickets.map((ticket) => [
+      ticket.id || "N/A",
+      ticket.title || "N/A",
+      ticket.reportedByUserName || ticket.reportedByUserId || "Unknown",
+      ticket.assignedTechnicianName
+        ? `${ticket.assignedTechnicianName} (${ticket.assignedTechnicianId || ""})`.trim()
+        : ticket.assignedTechnicianId || "Unassigned",
+      ticket.assetFacility || "N/A",
+      ticket.category || "N/A",
+      ticket.priority || "MEDIUM",
+      formatReportDate(ticket.createdAt),
+      ticket.resolutionNotes || "",
+    ]);
+
+    autoTable(doc, {
+      startY: 35,
+      head: [["Ticket ID", "Title", "Reporter", "Assigned Technician", "Asset / Facility", "Category", "Priority", "Created At", "Resolution Notes"]],
+      body: rows,
+      theme: "grid",
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        valign: "top",
+        overflow: "linebreak",
+      },
+      headStyles: {
+        fillColor: [10, 25, 47],
+        textColor: 255,
+        fontStyle: "bold",
+      },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 34 },
+        3: { cellWidth: 34 },
+        4: { cellWidth: 28 },
+        5: { cellWidth: 22 },
+        6: { cellWidth: 18 },
+        7: { cellWidth: 28 },
+        8: { cellWidth: "auto" },
+      },
+    });
+
+    doc.save(fileName);
+
+    const message = `Resolved tickets report downloaded (${resolvedTickets.length} ticket${resolvedTickets.length === 1 ? "" : "s"}).`;
+    setActionError("");
+    setActionMessage(message);
+    showPopup("success", message);
   };
 
   const loadTickets = async () => {
@@ -467,12 +555,13 @@ function TicketsPage() {
               Filter all tickets by status and priority, assign technicians, and apply reject or close actions.
             </p>
           </div>
-          <Link
-            to={createTicketPath}
+          <button
+            type="button"
+            onClick={handleGenerateResolvedReport}
             className="inline-flex items-center justify-center rounded-2xl bg-[#61CE70] px-5 py-3 text-sm font-semibold text-[#0a192f] transition hover:bg-white"
           >
-            Create Ticket
-          </Link>
+            Generate PDF Report
+          </button>
         </div>
       </div>
 
@@ -575,7 +664,6 @@ function TicketsPage() {
                 <tr className="text-left text-slate-600">
                   <th className="px-4 py-3 font-semibold">Ticket</th>
                   <th className="px-4 py-3 font-semibold">Reporter</th>
-                  <th className="px-4 py-3 font-semibold">Attachments</th>
                   <th className="px-4 py-3 font-semibold">Asset / Facility</th>
                   <th className="px-4 py-3 font-semibold">Category</th>
                   <th className="px-4 py-3 font-semibold">Priority</th>
@@ -592,33 +680,16 @@ function TicketsPage() {
                     <td className="px-4 py-4">
                       <p className="font-semibold text-slate-900">{ticket.title}</p>
                       <p className="text-xs text-slate-500 mt-1">ID: {ticket.id}</p>
-                      <p className="text-xs text-slate-500 mt-1">{ticket.description || "No description"}</p>
+                      <Link
+                        to={`/admin/tickets/${ticket.id}`}
+                        className="mt-3 inline-flex rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-[#61CE70] hover:text-[#0a192f]"
+                      >
+                        View Image and Details
+                      </Link>
                     </td>
                     <td className="px-4 py-4">
                       <p className="text-slate-900">{ticket.reportedByUserName || "N/A"}</p>
                       <p className="text-xs text-slate-500 mt-1">{ticket.reportedByUserId || "No user ID"}</p>
-                    </td>
-                    <td className="px-4 py-4">
-                      {ticket.attachmentUrls?.length ? (
-                        <div className="flex items-center gap-2">
-                          {ticket.attachmentUrls.slice(0, 3).map((attachmentUrl, index) => (
-                            <button
-                              type="button"
-                              key={`${ticket.id}-attachment-${index}`}
-                              onClick={() => openImagePreview(attachmentUrl)}
-                              className="block h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-white"
-                            >
-                              <img
-                                src={attachmentUrl}
-                                alt={`Ticket ${ticket.id} attachment ${index + 1}`}
-                                className="h-full w-full object-cover"
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-slate-500">No images</p>
-                      )}
                     </td>
                     <td className="px-4 py-4 text-slate-800">
                       {ticket.assetFacility || "N/A"}
@@ -629,8 +700,16 @@ function TicketsPage() {
                     <td className="px-4 py-4 font-medium text-slate-800">{ticket.priority || "MEDIUM"}</td>
                     <td className="px-4 py-4 font-medium text-slate-800">{ticket.status || "OPEN"}</td>
                     <td className="px-4 py-4">
-                      <p className="text-slate-900">{ticket.assignedTechnicianName || "Unassigned"}</p>
-                      <p className="text-xs text-slate-500 mt-1">{ticket.assignedTechnicianId || "No technician"}</p>
+                      <p className="text-slate-900">
+                        {ticket.assignedTechnicianId
+                          ? ticket.assignedTechnicianName
+                            ? `${ticket.assignedTechnicianName} (${ticket.assignedTechnicianId})`
+                            : `Assigned (${ticket.assignedTechnicianId})`
+                          : "Unassigned"}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {ticket.assignedTechnicianId || "Unassigned"}
+                      </p>
                     </td>
                     <td className="px-4 py-4 space-y-2">
                       <select
