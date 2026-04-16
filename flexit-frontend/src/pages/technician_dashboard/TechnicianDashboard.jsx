@@ -479,53 +479,57 @@ function TechnicianDashboard() {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-3xl border border-slate-200 bg-linear-to-r from-slate-950 via-slate-900 to-[#0a192f] p-6 text-white shadow-xl sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#61CE70]">Technician Dashboard</p>
-        <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">My Assigned Tickets</h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-300">
-          You can update only your assigned tickets to IN_PROGRESS or RESOLVED and add resolution notes.
-        </p>
-        <p className="mt-3 text-xs text-slate-300">
-          Logged in as: {sessionUser.userName || "Technician"} ({sessionUser.userId || "No user ID"})
-        </p>
+      <div className="relative overflow-hidden rounded-4xl border border-slate-200 bg-linear-to-br from-slate-950 via-slate-900 to-[#0a192f] p-6 text-white shadow-2xl sm:p-8">
+        <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#61CE70]/20 blur-3xl" />
+        <div className="absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-sky-400/10 blur-3xl" />
+        <div className="relative">
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#61CE70]">Technician Dashboard</p>
+          <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">My Assigned Tickets</h1>
+          <p className="mt-2 max-w-3xl text-sm text-slate-300">
+            You can update only your assigned tickets to IN_PROGRESS or RESOLVED and add resolution notes.
+          </p>
+          <p className="mt-3 text-xs text-slate-300">
+            Logged in as: {sessionUser.userName || "Technician"} ({sessionUser.userId || "No user ID"})
+          </p>
 
-        <div className="mt-5 flex flex-wrap items-end gap-3">
-          <div className="max-w-xs">
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">Priority Filter</label>
-            <select
-              value={priorityFilter}
-              onChange={(event) => setPriorityFilter(event.target.value)}
-              className="w-full rounded-xl border border-slate-600 bg-slate-900/70 px-3 py-2 text-sm text-white outline-none focus:border-[#61CE70]"
+          <div className="mt-5 flex flex-wrap items-end gap-3">
+            <div className="max-w-xs">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">Priority Filter</label>
+              <select
+                value={priorityFilter}
+                onChange={(event) => setPriorityFilter(event.target.value)}
+                className="w-full rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none backdrop-blur transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
+              >
+                {priorityFilters.map((priority) => (
+                  <option key={priority} value={priority}>
+                    {priority === "ALL" ? "All priorities" : priority}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadReport}
+              className="rounded-full bg-[#61CE70] px-3.5 py-2 text-xs font-semibold text-[#0a192f] transition hover:bg-white sm:px-4 sm:py-2.5 sm:text-sm"
             >
-              {priorityFilters.map((priority) => (
-                <option key={priority} value={priority}>
-                  {priority === "ALL" ? "All priorities" : priority}
-                </option>
-              ))}
-            </select>
+              Download PDF Report
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleDownloadReport}
-            className="rounded-xl bg-[#61CE70] px-4 py-2.5 text-sm font-semibold text-[#0a192f] transition hover:bg-white"
-          >
-            Download PDF Report
-          </button>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-lg ring-1 ring-white/60 backdrop-blur-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total Resolved</p>
           <p className="mt-2 text-3xl font-semibold text-[#0a192f]">{analytics.totalResolved}</p>
           <p className="mt-1 text-sm text-slate-500">Completed tasks so far</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-lg ring-1 ring-white/60 backdrop-blur-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Pending Tasks</p>
           <p className="mt-2 text-3xl font-semibold text-[#0a192f]">{analytics.pendingTasks}</p>
           <p className="mt-1 text-sm text-slate-500">Currently open or in progress</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-lg ring-1 ring-white/60 backdrop-blur-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Average Resolution Time</p>
           <p className="mt-2 text-3xl font-semibold text-[#0a192f]">{analytics.averageResolutionTime}</p>
           <p className="mt-1 text-sm text-slate-500">From created time to completion</p>
@@ -545,7 +549,7 @@ function TechnicianDashboard() {
       ) : null}
 
       {loading ? (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+        <div className="rounded-3xl border border-dashed border-slate-300 bg-white/90 p-10 text-center text-slate-500 shadow-sm">
           Loading your assigned tickets...
         </div>
       ) : filteredTickets.length ? (
@@ -555,7 +559,11 @@ function TechnicianDashboard() {
             const slaMeta = getSlaTimerMeta(ticket, nowMs, sessionUser.userId);
 
             return (
-              <article key={ticket.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <article
+                key={ticket.id}
+                className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_24px_60px_-28px_rgba(15,23,42,0.5)]"
+              >
+                <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-[#61CE70] via-sky-400 to-[#0a192f]" />
                 <div className="grid gap-6 lg:grid-cols-3">
                   <div className="lg:col-span-2">
                     <p className="text-xs font-medium text-slate-500">Ticket ID: {ticket.id}</p>
@@ -563,28 +571,28 @@ function TechnicianDashboard() {
                     <p className="mt-2 text-sm text-slate-600">{ticket.description || "No description provided."}</p>
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                      <div className="rounded-xl bg-slate-50 p-3">
+                      <div className="rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-100">
                         <p className="text-xs text-slate-500">Current Status</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.status || "OPEN"}</p>
                       </div>
-                      <div className="rounded-xl bg-slate-50 p-3">
+                      <div className="rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-100">
                         <p className="text-xs text-slate-500">Priority</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.priority || "MEDIUM"}</p>
                       </div>
-                      <div className="rounded-xl bg-slate-50 p-3">
+                      <div className="rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-100">
                         <p className="text-xs text-slate-500">Reporter</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.reportedByUserName || ticket.reportedByUserId || "Unknown"}</p>
                       </div>
-                      <div className="rounded-xl bg-slate-50 p-3">
+                      <div className="rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-100">
                         <p className="text-xs text-slate-500">Asset / Facility</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.assetFacility || "N/A"}</p>
                       </div>
-                      <div className="rounded-xl bg-slate-50 p-3">
+                      <div className="rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-100">
                         <p className="text-xs text-slate-500">Category</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.category || "N/A"}</p>
                       </div>
                       <div
-                        className={`rounded-xl border p-3 sm:col-span-2 xl:col-span-4 ${
+                        className={`rounded-2xl border p-3 sm:col-span-2 xl:col-span-4 ${
                           slaMeta.isResolved
                             ? "border-emerald-200 bg-emerald-50"
                             : slaMeta.isBreached
@@ -617,7 +625,7 @@ function TechnicianDashboard() {
                       </div>
                     </div>
 
-                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 ring-1 ring-slate-100">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Attachments</p>
                       <div className="mt-3 flex flex-wrap gap-3">
                         {ticket.attachmentUrls?.length ? (
@@ -644,38 +652,38 @@ function TechnicianDashboard() {
                     <div className="mt-4">
                       <Link
                         to={`/technician/tickets/${ticket.id}`}
-                        className="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[#61CE70] hover:text-[#0a192f]"
+                        className="inline-flex items-center rounded-full border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:border-[#61CE70] hover:text-[#0a192f]"
                       >
                         View Ticket Details & Images
                       </Link>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">Update Status</label>
+                  <div className="rounded-2xl border border-slate-100 bg-linear-to-b from-slate-50 to-white p-4 ring-1 ring-slate-100">
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-slate-600">Update Status</label>
                     <select
                       value={form.status}
                       onChange={(event) => handleChange(ticket.id, "status", event.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-[#61CE70]"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/10"
                     >
                       <option value="IN_PROGRESS">IN_PROGRESS</option>
                       <option value="RESOLVED">RESOLVED</option>
                     </select>
 
-                    <label className="mb-2 mt-4 block text-sm font-semibold text-slate-700">Resolution Notes</label>
+                    <label className="mb-2 mt-4 block text-xs font-semibold uppercase tracking-[0.15em] text-slate-600">Resolution Notes</label>
                     <textarea
                       rows={4}
                       value={form.notes}
                       onChange={(event) => handleChange(ticket.id, "notes", event.target.value)}
                       placeholder="Add resolution details"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-[#61CE70]"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/10"
                     />
 
                     <button
                       type="button"
                       onClick={() => handleSubmit(ticket)}
                       disabled={actionLoadingId === ticket.id}
-                      className="mt-4 w-full rounded-xl bg-[#0a192f] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#61CE70] hover:text-[#0a192f] disabled:opacity-60"
+                      className="mt-3 rounded-full bg-[#0a192f] px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#61CE70] hover:text-[#0a192f] disabled:opacity-60"
                     >
                       {actionLoadingId === ticket.id ? "Updating..." : "Save Update"}
                     </button>
@@ -686,7 +694,7 @@ function TechnicianDashboard() {
           })}
         </div>
       ) : (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500 shadow-sm">
+        <div className="rounded-3xl border border-dashed border-slate-300 bg-white/90 p-10 text-center text-slate-500 shadow-sm">
           {tickets.length
             ? "No tickets match the selected priority filter."
             : "No tickets are assigned to you right now."}

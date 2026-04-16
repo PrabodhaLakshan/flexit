@@ -5,17 +5,17 @@ import CommentSection from "../../components/tickets/CommentSection";
 import { getSessionUser } from "../../utils/sessionUser";
 
 const statusStyles = {
-  OPEN: "bg-amber-500/15 text-amber-700 border-amber-200",
-  IN_PROGRESS: "bg-sky-500/15 text-sky-700 border-sky-200",
-  RESOLVED: "bg-emerald-500/15 text-emerald-700 border-emerald-200",
-  REJECTED: "bg-rose-500/15 text-rose-700 border-rose-200",
+  OPEN: "bg-amber-400/20 text-amber-800 border-amber-300 shadow-sm",
+  IN_PROGRESS: "bg-sky-400/20 text-sky-800 border-sky-300 shadow-sm",
+  RESOLVED: "bg-emerald-400/20 text-emerald-800 border-emerald-300 shadow-sm",
+  REJECTED: "bg-rose-400/20 text-rose-800 border-rose-300 shadow-sm",
 };
 
 const priorityStyles = {
-  LOW: "bg-slate-100 text-slate-700 border-slate-200",
-  MEDIUM: "bg-indigo-500/15 text-indigo-700 border-indigo-200",
-  HIGH: "bg-orange-500/15 text-orange-700 border-orange-200",
-  URGENT: "bg-red-500/15 text-red-700 border-red-200",
+  LOW: "bg-slate-100 text-slate-700 border-slate-300 shadow-sm",
+  MEDIUM: "bg-indigo-400/20 text-indigo-800 border-indigo-300 shadow-sm",
+  HIGH: "bg-orange-400/20 text-orange-800 border-orange-300 shadow-sm",
+  URGENT: "bg-red-400/20 text-red-800 border-red-300 shadow-sm",
 };
 
 function formatDate(value) {
@@ -200,7 +200,7 @@ function TicketDetailsPage() {
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500 shadow-sm">
+      <div className="rounded-3xl border border-dashed border-cyan-300 bg-linear-to-br from-cyan-50 via-white to-emerald-50 p-10 text-center text-slate-600 shadow-lg">
         Loading ticket details...
       </div>
     );
@@ -208,7 +208,7 @@ function TicketDetailsPage() {
 
   if (error) {
     return (
-      <div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-800 shadow-sm">
+      <div className="rounded-3xl border border-rose-300 bg-linear-to-br from-rose-50 via-white to-orange-50 p-6 text-rose-800 shadow-lg">
         <p className="font-semibold">Unable to load ticket</p>
         <p className="mt-1 text-sm">{error}</p>
         <button
@@ -231,7 +231,7 @@ function TicketDetailsPage() {
       {previewImageUrl ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4">
           <div className="absolute inset-0" onClick={closeImagePreview} />
-          <div className="relative z-10 h-190 w-295 max-h-[92vh] max-w-[96vw] rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-2xl">
+          <div className="relative z-10 h-190 w-295 max-h-[92vh] max-w-[96vw] rounded-2xl border border-cyan-300/40 bg-linear-to-br from-slate-900 via-slate-950 to-[#031525] p-4 shadow-2xl">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-200">Image Preview</p>
               <div className="flex flex-wrap items-center gap-2">
@@ -313,7 +313,9 @@ function TicketDetailsPage() {
         </div>
       ) : null}
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="relative overflow-hidden rounded-3xl border border-cyan-100 bg-linear-to-br from-cyan-50 via-white to-emerald-50 p-6 shadow-xl sm:p-8">
+        <div className="pointer-events-none absolute -top-24 -right-20 h-56 w-56 rounded-full bg-cyan-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl" />
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap gap-2">
@@ -330,7 +332,7 @@ function TicketDetailsPage() {
             </div>
 
             <h1 className="mt-4 text-3xl font-semibold text-slate-900">{ticket.title}</h1>
-            <p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-6 text-slate-600">
+            <p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-6 text-slate-700">
               {ticket.description || "No description provided."}
             </p>
           </div>
@@ -338,14 +340,14 @@ function TicketDetailsPage() {
           <div className="flex flex-wrap gap-2">
             <Link
               to={backPath}
-              className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[#61CE70] hover:text-[#0a192f]"
+              className="rounded-2xl border border-cyan-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-cyan-400 hover:text-[#0a192f]"
             >
               Back
             </Link>
             {canEditTicket ? (
               <Link
                 to={`/user/tickets/edit/${ticket.id}`}
-                className="rounded-2xl bg-[#0a192f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#61CE70] hover:text-[#0a192f]"
+                className="rounded-2xl bg-linear-to-r from-[#0a192f] to-cyan-700 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:from-[#0a192f] hover:to-emerald-500 hover:text-[#0a192f]"
               >
                 Edit Ticket
               </Link>
@@ -353,7 +355,7 @@ function TicketDetailsPage() {
             {canManageStatus ? (
               <Link
                 to={`${basePath}/edit/${ticket.id}`}
-                className="rounded-2xl bg-[#0a192f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#61CE70] hover:text-[#0a192f]"
+                className="rounded-2xl bg-linear-to-r from-[#0a192f] to-cyan-700 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:from-[#0a192f] hover:to-emerald-500 hover:text-[#0a192f]"
               >
                 Update Status
               </Link>
@@ -362,34 +364,34 @@ function TicketDetailsPage() {
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl border border-cyan-100 bg-white/90 p-4 shadow-sm">
             <p className="text-sm text-slate-500">Reported by</p>
             <p className="mt-1 font-semibold text-slate-900">{ticket.reportedByUserName || ticket.reportedByUserId || "Unknown"}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl border border-cyan-100 bg-white/90 p-4 shadow-sm">
             <p className="text-sm text-slate-500">Assigned technician</p>
             <p className="mt-1 font-semibold text-slate-900">{ticket.assignedTechnicianName || ticket.assignedTechnicianId || "Unassigned"}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl border border-cyan-100 bg-white/90 p-4 shadow-sm">
             <p className="text-sm text-slate-500">Created at</p>
             <p className="mt-1 font-semibold text-slate-900">{formatDate(ticket.createdAt)}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl border border-cyan-100 bg-white/90 p-4 shadow-sm">
             <p className="text-sm text-slate-500">Comment count</p>
             <p className="mt-1 font-semibold text-slate-900">{ticket.comments?.length || 0}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl border border-cyan-100 bg-white/90 p-4 shadow-sm">
             <p className="text-sm text-slate-500">Asset / Facility</p>
             <p className="mt-1 font-semibold text-slate-900">{ticket.assetFacility || "N/A"}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl border border-cyan-100 bg-white/90 p-4 shadow-sm">
             <p className="text-sm text-slate-500">Category</p>
             <p className="mt-1 font-semibold text-slate-900">{ticket.category || "N/A"}</p>
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+          <div className="rounded-2xl border border-cyan-100 bg-white/90 p-5 shadow-sm">
             <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Attachments</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {ticket.attachmentUrls?.length ? (
@@ -398,14 +400,14 @@ function TicketDetailsPage() {
                     type="button"
                     key={`${attachmentUrl}-${index}`}
                     onClick={() => openImagePreview(attachmentUrl)}
-                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                    className="overflow-hidden rounded-2xl border border-cyan-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <img
                       src={attachmentUrl}
                       alt={`Attachment ${index + 1}`}
                       className="h-40 w-full object-cover"
                     />
-                    <span className="block border-t border-slate-200 px-3 py-2 text-xs font-semibold text-[#0a192f] transition">
+                    <span className="block border-t border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-[#0a192f] transition">
                       Click to preview
                     </span>
                   </button>
@@ -419,7 +421,7 @@ function TicketDetailsPage() {
 
         <CommentSection ticketId={ticket.id} comments={ticket.comments || []} onRefresh={loadTicket} />
 
-        <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-5">
+        <div className="mt-6 rounded-2xl border border-cyan-100 bg-white/90 p-5 shadow-sm">
           <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Resolution</h2>
           <div className="mt-4 space-y-4 text-sm text-slate-700">
             <div>
