@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { deleteResource, getAllResources } from "../../api/resourceApi";
+import { deleteResource, getAllResources, exportResourcesCsv } from "../../api/resourceApi";
 import { useSearchParams, Link } from "react-router-dom";
 
 const TYPES = ["ALL", "LAB", "LECTURE_HALL", "MEETING_ROOM", "PROJECTOR", "CAMERA"];
@@ -59,6 +59,23 @@ function ResourcesPage() {
     }
   };
 
+  const handleExportCsv = async () => {
+    try {
+      const response = await exportResourcesCsv();
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `resources_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed", error);
+      alert("Failed to export resources. Please try again.");
+    }
+  };
+
   const filteredResources = resources.filter((resource) => {
     const matchesSearch =
       resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -79,15 +96,26 @@ function ResourcesPage() {
           <p className="text-sm text-gray-500 mt-1">Manage all available resources across branches.</p>
         </div>
         <div className="flex flex-col items-end gap-3">
-          <Link
-            to="/admin/resources/create"
-            className="px-4 py-2 bg-[#0a192f] text-white font-semibold rounded-lg hover:bg-[#61CE70] hover:text-[#0a192f] shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Resource
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportCsv}
+              className="px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export CSV
+            </button>
+            <Link
+              to="/admin/resources/create"
+              className="px-4 py-2 bg-[#0a192f] text-white font-semibold rounded-lg hover:bg-[#61CE70] hover:text-[#0a192f] shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Resource
+            </Link>
+          </div>
           {/* Search Bar */}
           <div className="relative w-full sm:w-64">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
