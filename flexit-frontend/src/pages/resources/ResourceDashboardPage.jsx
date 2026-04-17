@@ -22,7 +22,7 @@ function ResourceDashboardPage() {
 
   const totalResources = resources.length;
   const activeResources = resources.filter(r => r.status === 'ACTIVE').length;
-  const inactiveResources = resources.filter(r => r.status === 'INACTIVE').length;
+  const outOfServiceResources = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
 
   return (
     <div className="max-w-7xl mx-auto h-full flex flex-col p-6">
@@ -52,7 +52,7 @@ function ResourceDashboardPage() {
             <span className="mt-4 text-sm font-medium text-blue-600 group-hover:text-blue-700">View all &rarr;</span>
           </Link>
 
-          {/* Right Side: Active & Inactive */}
+          {/* Right Side: Active & Out of Service */}
           <div className="flex flex-col gap-6">
             <Link 
               to="/admin/resources?status=ACTIVE"
@@ -71,7 +71,7 @@ function ResourceDashboardPage() {
             </Link>
 
             <Link 
-              to="/admin/resources?status=INACTIVE"
+              to="/admin/resources?status=OUT_OF_SERVICE"
               className="flex items-center p-8 bg-red-50/80 border border-red-200 rounded-3xl shadow-sm hover:shadow-md transition-all group cursor-pointer hover:bg-red-100/60"
             >
               <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 shadow-sm transition-transform duration-300">
@@ -80,10 +80,10 @@ function ResourceDashboardPage() {
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-red-800">Inactive Resources</h3>
+                <h3 className="text-xl font-bold text-red-800">Out of Service</h3>
                 <p className="text-sm font-medium text-red-600/80 mt-1">Under maintenance or unavailable</p>
               </div>
-              <p className="text-4xl font-black text-red-600 ml-4">{inactiveResources}</p>
+              <p className="text-4xl font-black text-red-600 ml-4">{outOfServiceResources}</p>
             </Link>
           </div>
         </div>

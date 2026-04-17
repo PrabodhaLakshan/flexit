@@ -164,7 +164,7 @@ function ResourcesPage() {
         >
           <option value="ALL">All Status</option>
           <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
+          <option value="OUT_OF_SERVICE">Out of Service</option>
         </select>
 
         {/* Active filter count badge */}

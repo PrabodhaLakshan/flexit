@@ -93,7 +93,7 @@ function CreateResourcePage() {
                 "name,type,capacity,location,availabilityStart,availabilityEnd,status,description",
                 "Computer Lab A,LAB,30,Block A Floor 1,08:00,18:00,ACTIVE,Main computer lab",
                 "Lecture Hall 1,LECTURE_HALL,120,Block B Ground Floor,08:00,20:00,ACTIVE,Large lecture hall",
-                "Meeting Room 2,MEETING_ROOM,15,Block C Floor 2,09:00,17:00,INACTIVE,Under renovation",
+                "Meeting Room 2,MEETING_ROOM,15,Block C Floor 2,09:00,17:00,OUT_OF_SERVICE,Under renovation",
               ].join("\n");
               const blob = new Blob([sample], { type: "text/csv" });
               const url = URL.createObjectURL(blob);
