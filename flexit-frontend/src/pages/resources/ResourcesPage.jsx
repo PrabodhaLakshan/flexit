@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { deleteResource, getAllResources } from "../../api/resourceApi";
-import { Link } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 
 const TYPES = ["ALL", "LAB", "LECTURE_HALL", "MEETING_ROOM", "PROJECTOR", "CAMERA"];
 
@@ -14,10 +14,30 @@ const TYPE_LABELS = {
 };
 
 function ResourcesPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [resources, setResources] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("ALL");
-  const [selectedStatus, setSelectedStatus] = useState("ALL");
+  const [selectedStatus, setSelectedStatus] = useState(searchParams.get("status") || "ALL");
+
+  useEffect(() => {
+    const statusParam = searchParams.get("status");
+    if (statusParam && statusParam !== selectedStatus) {
+      setSelectedStatus(statusParam);
+    }
+  }, [searchParams]);
+
+  const handleStatusChange = (e) => {
+    const newStatus = e.target.value;
+    setSelectedStatus(newStatus);
+    
+    if (newStatus === "ALL") {
+      searchParams.delete("status");
+    } else {
+      searchParams.set("status", newStatus);
+    }
+    setSearchParams(searchParams);
+  };
 
   const loadResources = async () => {
     try {
@@ -111,7 +131,7 @@ function ResourcesPage() {
         {/* Status Filter Dropdown */}
         <select
           value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
+          onChange={handleStatusChange}
           className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#61CE70] focus:border-transparent bg-white text-gray-600 shadow-sm cursor-pointer"
         >
           <option value="ALL">All Status</option>
@@ -122,7 +142,15 @@ function ResourcesPage() {
         {/* Active filter count badge */}
         {(selectedType !== "ALL" || selectedStatus !== "ALL" || searchQuery) && (
           <button
-            onClick={() => { setSelectedType("ALL"); setSelectedStatus("ALL"); setSearchQuery(""); }}
+            onClick={() => { 
+              setSelectedType("ALL"); 
+              setSelectedStatus("ALL"); 
+              setSearchQuery(""); 
+              if (searchParams.has("status")) {
+                searchParams.delete("status");
+                setSearchParams(searchParams);
+              }
+            }}
             className="text-xs text-gray-400 hover:text-red-500 underline transition-colors"
           >
             Clear filters
