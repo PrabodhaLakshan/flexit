@@ -3,11 +3,13 @@ package com.flexit.controller;
 import com.flexit.model.Resource;
 import com.flexit.service.ResourceService;
 import jakarta.validation.Valid;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/resources")
@@ -33,15 +35,21 @@ public class ResourceController {
             @RequestParam(required = false) String location) {
 
         if (type != null || capacity != null || location != null) {
-            return ResponseEntity.ok(resourceService.searchResources(type, capacity, location));
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS).cachePublic().mustRevalidate())
+                    .body(resourceService.searchResources(type, capacity, location));
         }
 
-        return ResponseEntity.ok(resourceService.getAllResources());
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS).cachePublic().mustRevalidate())
+                .body(resourceService.getAllResources());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getResourceById(@PathVariable String id) {
-        return ResponseEntity.ok(resourceService.getResourceById(id));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS).cachePublic().mustRevalidate())
+                .body(resourceService.getResourceById(id));
     }
 
     @PutMapping("/{id}")

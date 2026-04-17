@@ -5,6 +5,7 @@ import com.flexit.model.IncidentTicket;
 import com.flexit.model.TicketStatus;
 import com.flexit.service.TicketService;
 import jakarta.validation.Valid;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -52,12 +54,16 @@ public class TicketController {
 
     @GetMapping
     public ResponseEntity<List<IncidentTicket>> getAllTickets() {
-        return ResponseEntity.ok(ticketService.getAllTickets());
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(30, TimeUnit.SECONDS).cachePrivate().mustRevalidate())
+                .body(ticketService.getAllTickets());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<IncidentTicket> getTicketById(@PathVariable String id) {
-        return ResponseEntity.ok(ticketService.getTicketById(id));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(30, TimeUnit.SECONDS).cachePrivate().mustRevalidate())
+                .body(ticketService.getTicketById(id));
     }
 
     @PatchMapping("/{id}/status")
@@ -72,7 +78,7 @@ public class TicketController {
 
     @PostMapping("/{id}/comments")
     public ResponseEntity<IncidentTicket> addComment(@PathVariable String id, @RequestBody Comment comment) {
-        return ResponseEntity.ok(ticketService.addComment(id, comment));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.addComment(id, comment));
     }
 
     @PutMapping("/{ticketId}/comments/{commentId}")
