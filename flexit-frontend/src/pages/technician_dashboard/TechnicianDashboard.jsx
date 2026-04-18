@@ -189,6 +189,7 @@ function TechnicianDashboard() {
   const sessionUser = useMemo(() => getSessionUser(), []);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState("");
@@ -279,6 +280,21 @@ function TechnicianDashboard() {
         [field]: value,
       },
     }));
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setMessage("");
+    try {
+      await loadAssignedTickets();
+      setMessage("✓ Dashboard refreshed successfully.");
+      setError("");
+    } catch (refreshError) {
+      setError(refreshError.message || "Unable to refresh dashboard.");
+      setMessage("");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleSubmit = async (ticket) => {
@@ -498,7 +514,7 @@ function TechnicianDashboard() {
               <select
                 value={priorityFilter}
                 onChange={(event) => setPriorityFilter(event.target.value)}
-                className="w-full rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-black outline-none backdrop-blur transition focus:border-[#61CE70] focus:ring-4 focus:ring-[#61CE70]/15"
+                className="w-full rounded-2xl border border-white/15 bg-[#61CE70] px-3 py-2 text-sm text-[#0a192f] font-semibold outline-none transition focus:ring-4 focus:ring-white/20"
               >
                 {priorityFilters.map((priority) => (
                   <option key={priority} value={priority}>
@@ -507,6 +523,14 @@ function TechnicianDashboard() {
                 ))}
               </select>
             </div>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="rounded-full bg-[#61CE70] px-3.5 py-2 text-xs font-semibold text-[#0a192f] transition hover:bg-white disabled:opacity-60 sm:px-4 sm:py-2.5 sm:text-sm"
+            >
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </button>
             <button
               type="button"
               onClick={handleDownloadReport}

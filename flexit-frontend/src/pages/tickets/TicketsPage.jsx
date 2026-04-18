@@ -83,7 +83,9 @@ function TicketsPage() {
   const [customTechnicianByTicket, setCustomTechnicianByTicket] = useState({});
   const [rejectReasonByTicket, setRejectReasonByTicket] = useState({});
   const [closeNoteByTicket, setCloseNoteByTicket] = useState({});
+  const [rejectedCount, setRejectedCount] = useState(0);
   const [popup, setPopup] = useState(null);
+  const [selectedTicketForReview, setSelectedTicketForReview] = useState(null);
   const [previewImageUrl, setPreviewImageUrl] = useState("");
   const [previewZoom, setPreviewZoom] = useState(1);
   const [previewOrigin, setPreviewOrigin] = useState({ x: 50, y: 50 });
@@ -387,14 +389,21 @@ function TicketsPage() {
       });
   }, [tickets, searchTerm, statusFilter, priorityFilter]);
 
-  const counts = tickets.reduce(
-    (accumulator, ticket) => {
-      const status = ticket.status || "OPEN";
-      accumulator[status] = (accumulator[status] || 0) + 1;
-      return accumulator;
-    },
-    { OPEN: 0, IN_PROGRESS: 0, RESOLVED: 0, REJECTED: 0 }
-  );
+  const counts = useMemo(() => {
+    const baseCounts = tickets.reduce(
+      (accumulator, ticket) => {
+        const status = ticket.status || "OPEN";
+        accumulator[status] = (accumulator[status] || 0) + 1;
+        return accumulator;
+      },
+      { OPEN: 0, IN_PROGRESS: 0, RESOLVED: 0 }
+    );
+
+    return {
+      ...baseCounts,
+      REJECTED: rejectedCount,
+    };
+  }, [tickets, rejectedCount]);
 
   const runAction = async (ticketId, fn, successText) => {
     setActionMessage("");
@@ -455,6 +464,12 @@ function TicketsPage() {
     );
 
     if (success) {
+      setRejectedCount((previous) => previous + 1);
+      setRejectReasonByTicket((previous) => {
+        const next = { ...previous };
+        delete next[ticket.id];
+        return next;
+      });
       showPopup("success", `Ticket ${ticket.id} rejected and deleted.`);
     }
   };
@@ -495,6 +510,14 @@ function TicketsPage() {
   };
 
   const isActionLoading = (ticketId) => actionLoadingId === ticketId;
+
+  const openReviewModal = (ticket) => {
+    setSelectedTicketForReview(ticket);
+  };
+
+  const closeReviewModal = () => {
+    setSelectedTicketForReview(null);
+  };
 
   const openImagePreview = (imageUrl) => {
     setPreviewImageUrl(imageUrl);
@@ -645,6 +668,117 @@ function TicketsPage() {
                   }}
                 />
               ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {selectedTicketForReview ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4">
+          <div className="absolute inset-0" onClick={closeReviewModal} />
+          <div className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl border border-rose-300/30 bg-linear-to-br from-white via-slate-50 to-slate-100 p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-slate-900">Review Ticket Details</h2>
+              <button
+                type="button"
+                onClick={closeReviewModal}
+                className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-300"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-500">Ticket ID</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{selectedTicketForReview.id}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-500">Priority</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{selectedTicketForReview.priority || "MEDIUM"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-500">Status</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{selectedTicketForReview.status || "OPEN"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-500">Reporter</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{selectedTicketForReview.reportedByUserName || selectedTicketForReview.reportedByUserId || "Unknown"}</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold text-slate-500">Title</p>
+                <p className="mt-1 text-sm font-medium text-slate-900">{selectedTicketForReview.title}</p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold text-slate-500">Description</p>
+                <p className="mt-1 text-sm text-slate-700">{selectedTicketForReview.description || "No description provided."}</p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-500">Asset / Facility</p>
+                  <p className="mt-1 text-sm text-slate-700">{selectedTicketForReview.assetFacility || "N/A"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-500">Location</p>
+                  <p className="mt-1 text-sm text-slate-700">{selectedTicketForReview.location || "N/A"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-500">Category</p>
+                  <p className="mt-1 text-sm text-slate-700">{selectedTicketForReview.category || "N/A"}</p>
+                </div>
+              </div>
+
+              {selectedTicketForReview.attachmentUrls?.length ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-500">Attachments</p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {selectedTicketForReview.attachmentUrls.map((attachmentUrl, index) => (
+                      <button
+                        key={`${attachmentUrl}-${index}`}
+                        type="button"
+                        onClick={() => {
+                          openImagePreview(attachmentUrl);
+                          closeReviewModal();
+                        }}
+                        className="overflow-hidden rounded-lg border border-slate-300 bg-white transition hover:border-rose-400"
+                      >
+                        <img
+                          src={attachmentUrl}
+                          alt={`Attachment ${index + 1}`}
+                          className="h-32 w-full object-cover"
+                        />
+                        <p className="border-t border-slate-200 bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">Click to expand</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={closeReviewModal}
+                  className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleReject(selectedTicketForReview);
+                    closeReviewModal();
+                  }}
+                  disabled={isActionLoading(selectedTicketForReview.id)}
+                  className="flex-1 rounded-lg bg-rose-600 px-4 py-2 font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
+                >
+                  {isActionLoading(selectedTicketForReview.id) ? "Rejecting..." : "Confirm Reject"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -870,11 +1004,11 @@ function TicketsPage() {
                       />
                       <button
                         type="button"
-                        onClick={() => handleReject(ticket)}
+                        onClick={() => openReviewModal(ticket)}
                         disabled={isActionLoading(ticket.id)}
                         className="block rounded-xl bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
                       >
-                        {isActionLoading(ticket.id) ? "Working..." : "Reject"}
+                        {isActionLoading(ticket.id) ? "Working..." : "View & Reject"}
                       </button>
                     </td>
                     <td className="px-4 py-4 space-y-2">
