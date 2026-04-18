@@ -17,10 +17,8 @@ import java.util.Objects;
 public class TicketService {
     private final TicketRepository ticketRepository;
     private static final Map<String, String> DEFAULT_TECHNICIANS = Map.of(
-            "TECH001", "Technician 001",
-            "TECH002", "Technician 002",
-            "TECH003", "Technician 003",
-            "TECH004", "Technician 004"
+            "TECH001", "Technician 001"
+            
     );
 
     public TicketService(TicketRepository ticketRepository) {
@@ -73,7 +71,7 @@ public class TicketService {
             ticket.setTitle(generatedTitle);
         }
     }
-
+    //convert to images to base64 and add to attachment urls list in ticket
     private void applyMultipartAttachments(IncidentTicket ticket, List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             return;
@@ -88,8 +86,8 @@ public class TicketService {
 
             try {
                 String mimeType = file.getContentType() == null ? "image/png" : file.getContentType();
-                String encoded = Base64.getEncoder().encodeToString(file.getBytes());
-                attachments.add("data:" + mimeType + ";base64," + encoded);
+                String encoded = Base64.getEncoder().encodeToString(file.getBytes());//convert file to base64 string
+                attachments.add("data:" + mimeType + ";base64," + encoded);//store as data url format
             } catch (Exception exception) {
                 throw new IllegalArgumentException("Unable to read uploaded image files.");
             }

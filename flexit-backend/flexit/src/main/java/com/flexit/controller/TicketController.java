@@ -33,14 +33,14 @@ public class TicketController {
 
     @PutMapping("/{id}")
     public ResponseEntity<IncidentTicket> updateTicket(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody IncidentTicket ticket,
-            @RequestParam String userId) {
+            @RequestParam("userId") String userId) {
         return ResponseEntity.ok(ticketService.updateTicket(id, ticket, userId));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTicket(@PathVariable String id, @RequestParam String userId) {
+    public ResponseEntity<Void> deleteTicket(@PathVariable("id") String id, @RequestParam("userId") String userId) {
         ticketService.deleteTicket(id, userId);
         return ResponseEntity.noContent().build();
     }
@@ -60,7 +60,7 @@ public class TicketController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<IncidentTicket> getTicketById(@PathVariable String id) {
+    public ResponseEntity<IncidentTicket> getTicketById(@PathVariable("id") String id) {
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.SECONDS).cachePrivate().mustRevalidate())
                 .body(ticketService.getTicketById(id));
@@ -68,41 +68,41 @@ public class TicketController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<IncidentTicket> updateStatus(
-            @PathVariable String id,
-            @RequestParam TicketStatus status,
-            @RequestParam(required = false) String notes,
-            @RequestParam(required = false) String techId,
-            @RequestParam(required = false) String userId) {
+            @PathVariable("id") String id,
+            @RequestParam("status") TicketStatus status,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "techId", required = false) String techId,
+            @RequestParam(value = "userId", required = false) String userId) {
         return ResponseEntity.ok(ticketService.updateTicketStatus(id, status, notes, techId, userId));
     }
 
     @PostMapping("/{id}/comments")
-    public ResponseEntity<IncidentTicket> addComment(@PathVariable String id, @RequestBody Comment comment) {
+    public ResponseEntity<IncidentTicket> addComment(@PathVariable("id") String id, @RequestBody Comment comment) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.addComment(id, comment));
     }
 
     @PutMapping("/{ticketId}/comments/{commentId}")
     public ResponseEntity<IncidentTicket> updateComment(
-            @PathVariable String ticketId,
-            @PathVariable String commentId,
-            @RequestParam String userId,
-            @RequestParam(required = false) String userRole,
+            @PathVariable("ticketId") String ticketId,
+            @PathVariable("commentId") String commentId,
+            @RequestParam("userId") String userId,
+            @RequestParam(value = "userRole", required = false) String userRole,
             @RequestBody Comment comment) {
         return ResponseEntity.ok(ticketService.updateComment(ticketId, commentId, comment, userId, userRole));
     }
 
     @DeleteMapping("/{ticketId}/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
-            @PathVariable String ticketId,
-            @PathVariable String commentId,
-            @RequestParam String userId,
-            @RequestParam(required = false) String userRole) {
+            @PathVariable("ticketId") String ticketId,
+            @PathVariable("commentId") String commentId,
+            @RequestParam("userId") String userId,
+            @RequestParam(value = "userRole", required = false) String userRole) {
         ticketService.deleteComment(ticketId, commentId, userId, userRole);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/assignee")
-    public ResponseEntity<IncidentTicket> assignTechnician(@PathVariable String id, @RequestParam String techId) {
+    public ResponseEntity<IncidentTicket> assignTechnician(@PathVariable("id") String id, @RequestParam("techId") String techId) {
         return ResponseEntity.ok(ticketService.assignTechnician(id, techId));
     }
 }
