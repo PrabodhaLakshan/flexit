@@ -11,6 +11,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { createBooking } from "../../api/bookingApi";
+import { getAllResources } from "../../api/resourceApi";
 
 const getStoredUserCode = () => {
   try {
@@ -35,6 +36,8 @@ const getStoredUserCode = () => {
 function BookingsFormPage() {
   const navigate = useNavigate();
   const [loggedInUserCode, setLoggedInUserCode] = useState(getStoredUserCode);
+  const [resources, setResources] = useState([]);
+  const [resourcesLoading, setResourcesLoading] = useState(true);
   const [formData, setFormData] = useState({
     userId: getStoredUserCode(),
     resourceId: "",
@@ -95,6 +98,26 @@ function BookingsFormPage() {
       ...prev,
       userId: storedUserCode,
     }));
+  }, []);
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        setResourcesLoading(true);
+        const response = await getAllResources();
+        const activeResources = (response.data || []).filter(
+          (resource) => resource.status === "ACTIVE" && resource.resourceCode
+        );
+        setResources(activeResources);
+      } catch (error) {
+        console.error("Failed to fetch resources:", error);
+        setResources([]);
+      } finally {
+        setResourcesLoading(false);
+      }
+    };
+
+    fetchResources();
   }, []);
 
   const getMinDateTime = () => {
@@ -160,7 +183,7 @@ function BookingsFormPage() {
     }
 
     if (!formData.resourceId.trim()) {
-      showAlert("error", "Resource ID is required.");
+      showAlert("error", "Resource code is required.");
       setLoading(false);
       return;
     }
@@ -323,17 +346,33 @@ function BookingsFormPage() {
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Resource ID
+              Resource Code
             </label>
-            <input
-              type="text"
+            <select
               name="resourceId"
               value={formData.resourceId}
               onChange={handleChange}
-              placeholder="Enter resource ID"
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#61CE70] focus:bg-white"
+              disabled={resourcesLoading || resources.length === 0}
               required
-            />
+            >
+              <option value="">
+                {resourcesLoading
+                  ? "Loading resource codes..."
+                  : resources.length === 0
+                    ? "No active resources available"
+                    : "Select a resource code"}
+              </option>
+              {resources.map((resource) => (
+                <option key={resource.id} value={resource.resourceCode}>
+                  {resource.resourceCode} - {resource.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-xs text-slate-500">
+              Newly added active resources will appear here by their
+              `resourceCode`.
+            </p>
           </div>
 
           <div>
