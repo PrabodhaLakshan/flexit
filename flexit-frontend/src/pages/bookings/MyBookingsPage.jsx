@@ -308,10 +308,7 @@ function MyBookingsPage() {
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">
           My Bookings
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Track your booking requests, view status updates, and manage approved
-          reservations.
-        </p>
+        
       </div>
 
       <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -320,10 +317,7 @@ function MyBookingsPage() {
             <h2 className="text-lg font-semibold text-slate-900">
               Showing your booking history
             </h2>
-            <p className="text-sm text-slate-500">
-              This page only displays bookings linked to your logged-in user
-              code.
-            </p>
+             
           </div>
 
           <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
