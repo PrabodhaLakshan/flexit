@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  Search,
   ClipboardList,
   MessageSquareText,
   Users,
@@ -15,8 +14,28 @@ import {
 } from "lucide-react";
 import { getMyBookings, cancelBooking } from "../../api/bookingApi";
 
+const getStoredUserCode = () => {
+  try {
+    const storedUser = JSON.parse(localStorage.getItem("flexitUser") || "null");
+    if (storedUser?.userCode) {
+      return storedUser.userCode;
+    }
+
+    if (
+      typeof storedUser?.userId === "string" &&
+      /^user\d+$/i.test(storedUser.userId)
+    ) {
+      return storedUser.userId;
+    }
+
+    return "";
+  } catch {
+    return "";
+  }
+};
+
 function MyBookingsPage() {
-  const [userId, setUserId] = useState("user001");
+  const [userId] = useState(getStoredUserCode);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -77,7 +96,7 @@ function MyBookingsPage() {
 
   const fetchMyBookings = async () => {
     if (!userId.trim()) {
-      showToast("error", "Please enter a user ID");
+      showToast("error", "Logged-in user's user code was not found.");
       return;
     }
 
@@ -98,7 +117,7 @@ function MyBookingsPage() {
 
   useEffect(() => {
     fetchMyBookings();
-  }, []);
+  }, [userId]);
 
   const openCancelModal = (booking) => {
     setCancelModal({
@@ -295,37 +314,22 @@ function MyBookingsPage() {
         </p>
       </div>
 
-      {/* Search Panel */}
       <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center gap-2">
-          <div className="rounded-2xl bg-slate-100 p-2 text-slate-600">
-            <Search size={18} />
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
-              Find Your Bookings
+              Showing your booking history
             </h2>
             <p className="text-sm text-slate-500">
-              Enter your user ID to load submitted booking requests.
+              This page only displays bookings linked to your logged-in user
+              code.
             </p>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <input
-            type="text"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#61CE70] focus:bg-white"
-            placeholder="Enter user ID"
-          />
-          <button
-            onClick={fetchMyBookings}
-            disabled={loading}
-            className="rounded-2xl bg-[#61CE70] px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-[#52ba60] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {loading ? "Loading..." : "Load Bookings"}
-          </button>
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+            <Users size={16} />
+            {userId || "User code unavailable"}
+          </div>
         </div>
       </div>
 
@@ -353,7 +357,7 @@ function MyBookingsPage() {
             No bookings found
           </h3>
           <p className="mt-2 text-sm text-slate-500">
-            We could not find any bookings for this user ID.
+            We could not find any bookings for your account yet.
           </p>
         </div>
       ) : (
