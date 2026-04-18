@@ -8,6 +8,8 @@ import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
 import ResourceDashboardPage from "../pages/resources/ResourceDashboardPage";
 import UserDashboardPage from "../pages/user/UserDashboardPage";
 import UserResourcesPage from "../pages/user/UserResourcesPage";
+import BookingsFormPage from "../pages/bookings/BookingsFormPage";
+import MyBookingsPage from "../pages/bookings/MyBookingsPage";
 
 function AppRoutes() {
   return (
@@ -27,6 +29,8 @@ function AppRoutes() {
       {/* User Routes */}
       <Route path="/user/dashboard" element={<UserDashboardPage />} />
       <Route path="/user/resources" element={<UserResourcesPage />} />
+      <Route path="/book-resource" element={<BookingsFormPage />} />
+      <Route path="/my-bookings" element={<MyBookingsPage />} />
     </Routes>
   );
 }
