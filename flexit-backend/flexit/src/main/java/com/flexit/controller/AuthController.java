@@ -1,6 +1,7 @@
 package com.flexit.controller;
 
 import com.flexit.dto.AuthResponse;
+import com.flexit.dto.GoogleLoginRequest;
 import com.flexit.dto.LoginRequest;
 import com.flexit.dto.SignupRequest;
 import com.flexit.service.AuthService;
@@ -33,5 +34,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        return ResponseEntity.ok(authService.googleLogin(request));
     }
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../api/authApi';
+import { GoogleLogin } from '@react-oauth/google';
+import { googleLogin, loginUser } from '../api/authApi';
 import './Auth.css';
 
 const getErrorMessage = (err) => {
@@ -30,6 +31,15 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const handleAuthSuccess = (data) => {
+    localStorage.setItem('flexitUser', JSON.stringify(data));
+    if (data.role === 'ADMIN') {
+      navigate('/admin-dashboard');
+    } else {
+      navigate('/resources');
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -55,12 +65,26 @@ function Login() {
         password: formData.password,
       });
 
-      localStorage.setItem('flexitUser', JSON.stringify(data));
-      if (data.role === 'ADMIN') {
-        navigate('/admin-dashboard');
-      } else {
-        navigate('/resources');
-      }
+      handleAuthSuccess(data);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (!credentialResponse?.credential) {
+      setError('Google authentication failed. Please try again.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const data = await googleLogin({ idToken: credentialResponse.credential });
+      handleAuthSuccess(data);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -114,9 +138,13 @@ function Login() {
           </div>
 
           <div className="social-login">
-            <button className="btn-social google">
-              <span>🔍</span> Login with Google
-            </button>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google authentication failed. Please try again.')}
+              text="signin_with"
+              shape="pill"
+              width="100%"
+            />
             <button className="btn-social github">
               <span>💻</span> Login with GitHub
             </button>
