@@ -1,47 +1,92 @@
-import { Link, useLocation } from "react-router-dom";
-import { getSessionUser } from "../../utils/sessionUser";
+import React from "react";
+import { NavLink } from "react-router-dom";
+import {
+    ClipboardList,
+    LayoutDashboard,
+    LogOut,
+    PlusCircle,
+    Layers,
+} from "lucide-react";
+
+const navigationItems = [
+    {
+        to: "/user/dashboard",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+    },
+    {
+        to: "/book-resource",
+        label: "Book Resource",
+        icon: PlusCircle,
+    },
+    {
+        to: "/my-bookings",
+        label: "My Bookings",
+        icon: ClipboardList,
+    },
+    {
+        to: "/user/resources",
+        label: "Resources",
+        icon: Layers,
+    },
+];
 
 function UserSidebar() {
-  const location = useLocation();
-  const sessionUser = getSessionUser();
+    return (
+        <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-80 shrink-0 overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.75)] backdrop-blur lg:flex lg:flex-col">
+            <div className="border-b border-slate-200 px-6 py-6">
+                <div className="rounded-[1.75rem] bg-[linear-gradient(135deg,_#0f172a_0%,_#1e293b_45%,_#61CE70_140%)] p-5 text-white">
+                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-200">
+                        Flexit
+                    </p>
+                    <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+                        User Dashboard
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">
+                        Booking management with a clearer view of your activity.
+                    </p>
+                </div>
+            </div>
 
-  const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + "/");
+            <div className="flex flex-1 flex-col px-4 py-5">
+                <nav className="space-y-2">
+                    {navigationItems.map((item) => {
+                        const Icon = item.icon;
 
-  const getLinkClasses = (path) => {
-    if (isActive(path)) {
-      return "flex items-center gap-3 rounded-xl border border-[#61CE70]/20 bg-[#61CE70]/10 px-4 py-3 text-sm font-medium text-[#61CE70] shadow-sm transition-all";
-    }
+                        return (
+                            <NavLink key={item.label} to={item.to}>
+                                {({ isActive }) => (
+                                    <div
+                                        className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all ${isActive
+                                                ? "bg-slate-950 text-white shadow-[0_16px_30px_-20px_rgba(15,23,42,0.95)]"
+                                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                                            }`}
+                                    >
+                                        <span
+                                            className={`rounded-xl p-2 transition ${isActive
+                                                    ? "bg-white/10 text-white"
+                                                    : "bg-slate-100 text-slate-500"
+                                                }`}
+                                        >
+                                            <Icon size={18} />
+                                        </span>
+                                        <span>{item.label}</span>
+                                    </div>
+                                )}
+                            </NavLink>
+                        );
+                    })}
+                </nav>
 
-    return "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white";
-  };
-
-  return (
-    <aside className="flex h-full w-64 flex-col border-r border-slate-800 bg-slate-900 shadow-xl transition-all duration-300">
-      <div className="flex flex-1 flex-col overflow-y-auto pb-4">
-        <div className="px-4 py-6">
-          <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400">User Panel</h2>
-          <nav className="relative flex-1 space-y-2">
-            <Link to="/user/dashboard" className={getLinkClasses("/user/dashboard")}> 
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-              </svg>
-              My Tickets
-            </Link>
-          </nav>
-        </div>
-      </div>
-
-      <div className="mx-4 flex shrink-0 items-center gap-3 border-t border-slate-800 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#61CE70]/20 font-bold text-[#61CE70] ring-2 ring-[#61CE70] ring-offset-2 ring-offset-slate-900">
-          {(sessionUser.userName || "U").charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <p className="text-sm font-medium text-white">{sessionUser.userName || "User"}</p>
-          <p className="text-xs font-medium text-slate-400">{sessionUser.userId || "No user ID"}</p>
-        </div>
-      </div>
-    </aside>
-  );
+                <div className="mt-auto border-t border-slate-200 pt-5">
+                    <button className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-rose-500 transition hover:bg-rose-50">
+                        <LogOut size={20} />
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+    );
 }
 
 export default UserSidebar;
