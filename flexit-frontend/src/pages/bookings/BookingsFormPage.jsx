@@ -12,10 +12,31 @@ import {
 } from "lucide-react";
 import { createBooking } from "../../api/bookingApi";
 
+const getStoredUserCode = () => {
+  try {
+    const storedUser = JSON.parse(localStorage.getItem("flexitUser") || "null");
+    if (storedUser?.userCode) {
+      return storedUser.userCode;
+    }
+
+    if (
+      typeof storedUser?.userId === "string" &&
+      /^user\d+$/i.test(storedUser.userId)
+    ) {
+      return storedUser.userId;
+    }
+
+    return "";
+  } catch {
+    return "";
+  }
+};
+
 function BookingsFormPage() {
   const navigate = useNavigate();
+  const [loggedInUserCode, setLoggedInUserCode] = useState(getStoredUserCode);
   const [formData, setFormData] = useState({
-    userId: "",
+    userId: getStoredUserCode(),
     resourceId: "",
     startTime: "",
     endTime: "",
@@ -67,6 +88,15 @@ function BookingsFormPage() {
     return () => clearTimeout(redirectTimer);
   }, [alert.show, alert.type, navigate]);
 
+  useEffect(() => {
+    const storedUserCode = getStoredUserCode();
+    setLoggedInUserCode(storedUserCode);
+    setFormData((prev) => ({
+      ...prev,
+      userId: storedUserCode,
+    }));
+  }, []);
+
   const getMinDateTime = () => {
     const now = new Date();
     const offset = now.getTimezoneOffset();
@@ -101,7 +131,7 @@ function BookingsFormPage() {
 
   const handleClear = () => {
     setFormData({
-      userId: "",
+      userId: loggedInUserCode,
       resourceId: "",
       startTime: "",
       endTime: "",
@@ -117,8 +147,14 @@ function BookingsFormPage() {
     setLoading(true);
     closeAlert();
 
+    if (!loggedInUserCode.trim()) {
+      showAlert("error", "Logged-in user's user code was not found.");
+      setLoading(false);
+      return;
+    }
+
     if (!formData.userId.trim()) {
-      showAlert("error", "User ID is required.");
+      showAlert("error", "User code is required.");
       setLoading(false);
       return;
     }
@@ -192,7 +228,7 @@ function BookingsFormPage() {
       );
 
       setFormData({
-        userId: "",
+        userId: loggedInUserCode,
         resourceId: "",
         startTime: "",
         endTime: "",
@@ -268,17 +304,21 @@ function BookingsFormPage() {
         <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              User ID
+              User Code
             </label>
             <input
               type="text"
               name="userId"
               value={formData.userId}
-              onChange={handleChange}
-              placeholder="Enter your user ID"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#61CE70] focus:bg-white"
+              readOnly
+              placeholder="Logged-in user code"
+              className="w-full cursor-not-allowed rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-700 outline-none"
               required
             />
+            <p className="mt-2 text-xs text-slate-500">
+              This field is filled automatically from the logged-in user's
+              `userCode`.
+            </p>
           </div>
 
           <div>
