@@ -1,0 +1,108 @@
+.home-header {
+  max-width: 1240px;
+  margin: 1rem auto 0;
+  padding: 1.8rem 2.4rem;
+  min-height: 124px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  border-radius: 18px;
+  background: linear-gradient(120deg, #081c3c 0%, #0d2c59 58%, #17546d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 34px rgba(7, 21, 49, 0.34);
+}
+
+.home-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.home-header__logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 14px 28px rgba(91, 217, 0, 0.24);
+}
+
+.home-header__title {
+  font-size: clamp(2.2rem, 3.2vw, 3rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f3b4 55%, #5bd900 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 14px rgba(91, 217, 0, 0.35), 0 0 28px rgba(165, 158, 5, 0.25);
+}
+
+.home-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 1.35rem;
+  margin-left: auto;
+  margin-right: 0.2rem;
+}
+
+.home-header__nav a {
+  color: #deedff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.06rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.home-header__nav a:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #5bd900;
+}
+
+.home-header__login {
+  border: 1px solid rgba(91, 217, 0, 0.85);
+  background: linear-gradient(135deg, #5bd900, #a59e05);
+  color: #0b2146;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.8rem 1.6rem;
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.home-header__login:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(91, 217, 0, 0.28);
+}
+
+@media (max-width: 900px) {
+  .home-header {
+    flex-wrap: wrap;
+    border-radius: 14px;
+    min-height: 108px;
+    padding: 1.2rem 1.2rem;
+  }
+
+  .home-header__logo {
+    width: 52px;
+    height: 52px;
+  }
+
+  .home-header__title {
+    font-size: 1.6rem;
+  }
+
+  .home-header__nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    justify-content: flex-start;
+  }
+}

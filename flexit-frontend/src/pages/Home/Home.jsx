@@ -1,31 +1,11 @@
-import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/footer/footer';
+import Header from '../../components/Header/header';
 import './Home.css';
 
 function Home() {
-  const navigate = useNavigate();
-
   return (
     <div className="landing-page">
-      <header className="landing-nav">
-        <div className="brand-wrap">
-          <img
-            src="/images/flexit_logo_Darkbg1.png"
-            alt="Flexit logo"
-            className="brand-logo"
-          />
-          <div className="brand">Flexit</div>
-        </div>
-
-        <nav className="landing-nav-links" aria-label="Main navigation">
-          <a href="#about-us">About Us</a>
-          <a href="#contact-us">Contact Us</a>
-        </nav>
-
-        <button className="login-btn" onClick={() => navigate('/login')}>
-          Login
-        </button>
-      </header>
+      <Header />
 
       <main className="landing-main">
         <section className="hero-section">
