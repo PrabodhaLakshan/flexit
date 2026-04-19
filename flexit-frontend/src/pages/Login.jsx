@@ -38,6 +38,8 @@ function Login() {
     } else {
       navigate('/user/resources');
     }
+
+    navigate('/user/dashboard');
   };
 
   const handleChange = (e) => {

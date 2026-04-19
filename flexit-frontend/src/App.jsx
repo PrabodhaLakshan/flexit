@@ -46,11 +46,7 @@ function AppLayout() {
 }
 
 function App() {
-  return (
-    <Router>
-      <AppLayout />
-    </Router>
-  );
+  return <AppRoutes />;
 }
 
 export default App;

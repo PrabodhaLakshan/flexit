@@ -32,19 +32,19 @@ function AdminSidebar() {
             </Link>
             
             <Link 
-              to="/admin/resources/dashboard" 
+              to="/admin/resources" 
               className={getLinkClasses('/admin/resources')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
               Resource Management
             </Link>
 
-            <Link
-              to="/admin/bookings"
-              className={getLinkClasses('/admin/bookings')}
+            <Link 
+              to="/admin/tickets" 
+              className={getLinkClasses('/admin/tickets')}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v11a2 2 0 002 2z" /></svg>
-              Booking Management
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
+              Ticket Management
             </Link>
             
             <Link 
@@ -58,7 +58,7 @@ function AdminSidebar() {
         </div>
       </div>
       
-      <div className="flex-shrink-0 flex items-center gap-3 p-4 border-t border-slate-800 mx-4">
+      <div className="shrink-0 flex items-center gap-3 p-4 border-t border-slate-800 mx-4">
         <div className="h-10 w-10 rounded-full bg-[#61CE70]/20 flex justify-center items-center text-[#61CE70] font-bold ring-2 ring-[#61CE70] ring-offset-2 ring-offset-slate-900">
           A
         </div>
