@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/navbar/Navbar';
+import Footer from './components/footer/footer';
 import Home from './components/home/Home';
 import Resources from './components/resources/Resources';
 import AdminDashboard from './pages/AdminDashboard';
@@ -29,11 +30,12 @@ function AdminRoute({ children }) {
 
 function AppLayout() {
   const location = useLocation();
-  const hideNavbar = location.pathname === '/login' || location.pathname === '/signup';
+  const hideLayout = location.pathname === '/login' || location.pathname === '/signup';
+  const showFooter = location.pathname === '/';
 
   return (
     <>
-      {!hideNavbar && <Navbar />}
+      {!hideLayout && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/resources" element={<Resources />} />
@@ -48,6 +50,7 @@ function AppLayout() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
       </Routes>
+      {showFooter && <Footer />}
     </>
   );
 }
