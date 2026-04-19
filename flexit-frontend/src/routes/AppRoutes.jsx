@@ -8,6 +8,7 @@ import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
 import ResourceDashboardPage from "../pages/resources/ResourceDashboardPage";
 import UserDashboardPage from "../pages/user/UserDashboardPage";
 import UserResourcesPage from "../pages/user/UserResourcesPage";
+import UserResourceDetailPage from "../pages/user/UserResourceDetailPage";
 
 function AppRoutes() {
   return (
@@ -34,6 +35,7 @@ function AppRoutes() {
         {/* User Routes */}
         <Route path="/user/dashboard" element={<UserDashboardPage />} />
         <Route path="/user/resources" element={<UserResourcesPage />} />
+        <Route path="/user/resources/:id" element={<UserResourceDetailPage />} />
       </Routes>
     </BrowserRouter>
   );
