@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   CalendarDays,
@@ -36,6 +36,8 @@ const getStoredUserCode = () => {
 
 function BookingsFormPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preselectedCode = searchParams.get("resourceCode");
   const [loggedInUserCode, setLoggedInUserCode] = useState(getStoredUserCode);
   const [resources, setResources] = useState([]);
   const [resourcesLoading, setResourcesLoading] = useState(true);
@@ -120,6 +122,17 @@ function BookingsFormPage() {
 
     fetchResources();
   }, []);
+
+  // Auto-select resource when coming from the detail page via Book Now
+  useEffect(() => {
+    if (!preselectedCode || resourcesLoading || resources.length === 0) return;
+    const matched = resources.find(
+      (r) => r.resourceCode === preselectedCode
+    );
+    if (matched) {
+      setFormData((prev) => ({ ...prev, resourceId: matched.resourceCode }));
+    }
+  }, [preselectedCode, resourcesLoading, resources]);
 
   const getMinDateTime = () => {
     const now = new Date();

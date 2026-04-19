@@ -132,7 +132,7 @@ function UserResourceDetailPage() {
 
                   {/* Book Now Button */}
                   <button
-                    onClick={() => navigate(`/user/booking/${resource.id}`)}
+                    onClick={() => navigate(`/book-resource?resourceCode=${resource.resourceCode}`)}
                     disabled={resource.status !== "ACTIVE"}
                     className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-md transition-all active:scale-95 whitespace-nowrap ${
                       resource.status === "ACTIVE"
@@ -219,7 +219,7 @@ function UserResourceDetailPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => navigate(`/user/booking/${resource.id}`)}
+                    onClick={() => navigate(`/book-resource?resourceCode=${resource.resourceCode}`)}
                     className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-[linear-gradient(135deg,_#22c55e,_#16a34a)] text-white font-bold text-sm shadow-lg hover:shadow-[0_10px_30px_-8px_rgba(34,197,94,0.6)] hover:-translate-y-0.5 transition-all active:scale-95 whitespace-nowrap"
                   >
                     <CalendarCheck size={17} />
