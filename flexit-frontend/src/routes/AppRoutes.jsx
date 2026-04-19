@@ -16,6 +16,7 @@ import EditTicketPage from "../pages/tickets/EditTicketPage";
 import UserDashboard from "../pages/user_dashboard/UserDashboard";
 import TechnicianDashboard from "../pages/technician_dashboard/TechnicianDashboard";
 import Login from "../pages/Login";
+import Home from "../pages/Home/Home";
 import { getSessionUser, isAuthenticated } from "../utils/sessionUser";
 
 function RequireAuth() {
@@ -45,7 +46,7 @@ function RequireRole({ role }) {
 }
 
 function AppRoutes() {
-  const landingPage = <Navigate to="/login" replace />;
+  const landingPage = <Home />;
 
   return (
     <BrowserRouter>

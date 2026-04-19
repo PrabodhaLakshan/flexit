@@ -2,7 +2,8 @@
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.import.maven.enabled": true,
     "java.project.importOnFirstTimeStartup": "automatic",
-    "java.debug.settings.forceBuildBeforeLaunch": true
+    "java.debug.settings.forceBuildBeforeLaunch": true,
+    "java.debug.settings.onBuildFailureProceed": true
 }
 
 
