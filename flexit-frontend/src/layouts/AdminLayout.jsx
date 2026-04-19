@@ -17,10 +17,12 @@ function AdminLayout() {
 
         {/* Main Workspace (Outlet renders matched child route) */}
         <main className="flex-1 overflow-y-auto bg-gray-50 flex flex-col">
-          <div className="p-8 flex-1">
+          <div className="p-8 flex-1 shrink-0">
             <Outlet />
           </div>
-          <Footer />
+          <div className="shrink-0 w-full">
+            <Footer />
+          </div>
         </main>
       </div>
     </div>
