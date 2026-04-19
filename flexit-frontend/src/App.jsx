@@ -25,7 +25,7 @@ function AppLayout() {
 
   return (
     <>
-      {!hideNavbar && <Navbar />}
+      {!hideLayout && <Navbar />}
       <Routes>
         {/* Public auth routes */}
         <Route path="/login" element={<Login />} />
@@ -41,6 +41,7 @@ function AppLayout() {
           }
         />
       </Routes>
+      {showFooter && <Footer />}
     </>
   );
 }
