@@ -574,7 +574,7 @@ function Login() {
                 onError={() => setError('Google authentication failed. Please try again.')}
                 text="signin_with"
                 shape="pill"
-                width="100%"
+                width="320"
               />
             </div>
             <button className="btn-social github">
