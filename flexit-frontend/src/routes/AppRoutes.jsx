@@ -82,8 +82,7 @@ function AppRoutes() {
         <Route path="/report-ticket/manage/:id" element={<TicketEditPage />} />
 
 
-        <Route path="/user/profile/update" element={<UpdateDetailsPage />} />
-              <Route path="/user/profile/change-password" element={<ChangePasswordPage />} />
+
 
         <Route element={<RequireAuth />}>
           <Route element={<RequireRole role="USER" />}>
@@ -97,6 +96,8 @@ function AppRoutes() {
               <Route path="/user/tickets/create" element={<CreateTicketPage />} />
               <Route path="/user/tickets/:id" element={<TicketDetailsPage />} />
               <Route path="/user/tickets/edit/:id" element={<TicketEditPage />} />
+                      <Route path="/user/profile/update" element={<UpdateDetailsPage />} />
+              <Route path="/user/profile/change-password" element={<ChangePasswordPage />} />
             </Route>
           </Route>
 
