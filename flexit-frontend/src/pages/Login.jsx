@@ -438,6 +438,16 @@ function Login() {
       });
     }
 
+    if (resolvedRole === 'ADMIN' && resolvedUserId) {
+      addNotification({
+        userId: resolvedUserId,
+        title: `👋 Welcome back, ${resolvedName}!`,
+        message: 'Admin dashboard is ready. Review resources and tickets from your workspace.',
+        type: 'greeting',
+        actionUrl: '/admin/dashboard',
+      });
+    }
+
     if (resolvedRole === 'ADMIN') {
       navigate('/admin/dashboard');
     } else if (resolvedRole === 'TECHNICIAN') {

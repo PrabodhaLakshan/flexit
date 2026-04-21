@@ -6,6 +6,7 @@ import TechnicianLayout from "../layouts/TechnicianLayout";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import AdminDashboard from "../pages/admin_dashboard/admin_dashboard";
+import AdminNotificationsPage from "../pages/admin_dashboard/AdminNotificationsPage";
 import UserDashboardPage from "../pages/user/UserDashboardPage";
 import UserResourcesPage from "../pages/user/UserResourcesPage";
 import UserResourceDetailPage from "../pages/user/UserResourceDetailPage";
@@ -112,6 +113,7 @@ function AppRoutes() {
           <Route element={<RequireRole role="ADMIN" />}>
             <Route element={<AdminLayout />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
 
               <Route path="/resources" element={<ResourcesPage />} />
               <Route path="/resources/dashboard" element={<ResourceDashboardPage />} />
