@@ -438,8 +438,10 @@ function Login() {
       });
     }
 
-    if (data.role === 'ADMIN') {
+    if (resolvedRole === 'ADMIN') {
       navigate('/admin/dashboard');
+    } else if (resolvedRole === 'TECHNICIAN') {
+      navigate('/technician/dashboard');
     } else {
       navigate('/user/dashboard');
     }
