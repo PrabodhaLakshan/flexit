@@ -6,7 +6,7 @@ import CreateResourcePage from "../pages/resources/CreateResourcePage";
 import EditResourcePage from "../pages/resources/EditResourcePage";
 import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
 import ResourceDashboardPage from "../pages/resources/ResourceDashboardPage";
-import UserDashboardPage from "../pages/user/UserDashboardPage";
+import UserDashboardPage from "../pages/bookings/UserDashboardPage";
 import UserResourcesPage from "../pages/user/UserResourcesPage";
 import BookingsFormPage from "../pages/bookings/BookingsFormPage";
 import MyBookingsPage from "../pages/bookings/MyBookingsPage";
