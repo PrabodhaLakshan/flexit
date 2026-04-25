@@ -136,6 +136,9 @@ function AppRoutes() {
               <Route path="/admin/tickets/create" element={<CreateTicketPage />} />
               <Route path="/admin/tickets/:id" element={<TicketDetailsPage />} />
               <Route path="/admin/tickets/edit/:id" element={<EditTicketPage />} />
+
+              <Route path="/admin/profile/update" element={<UpdateDetailsPage />} />
+              <Route path="/admin/profile/change-password" element={<ChangePasswordPage />} />
             </Route>
           </Route>
         </Route>
