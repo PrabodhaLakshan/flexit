@@ -3,6 +3,7 @@ package com.flexit.service;
 import com.flexit.model.Booking;
 import com.flexit.model.Notification;
 import com.flexit.model.NotificationType;
+import com.flexit.model.Resource;
 import com.flexit.model.UserRole;
 import com.flexit.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
@@ -116,6 +117,22 @@ public class NotificationService {
                 );
 
         createForUser(userId, NotificationType.BOOKING_REJECTED, title, message, "/my-bookings");
+    }
+
+    public void createResourceCreatedForUsers(Resource resource) {
+        if (resource == null) {
+            return;
+        }
+
+        String title = "New resource available";
+        String message = String.format(
+                Locale.ENGLISH,
+                "%s (%s) is now available for booking.",
+                safeValue(resource.getName()),
+                safeValue(resource.getResourceCode())
+        );
+
+        createForRole(UserRole.USER, NotificationType.GENERAL, title, message, "/user/resources");
     }
 
     public Notification createLoginNotification(String userId, String roleValue, String fullName) {

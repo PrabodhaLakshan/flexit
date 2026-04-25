@@ -15,14 +15,19 @@ import java.util.*;
 public class ResourceService {
 
     private final ResourceRepository resourceRepository;
+    private final NotificationService notificationService;
 
-    public ResourceService(ResourceRepository resourceRepository) {
+    public ResourceService(ResourceRepository resourceRepository,
+                           NotificationService notificationService) {
         this.resourceRepository = resourceRepository;
+        this.notificationService = notificationService;
     }
 
     public Resource createResource(Resource resource) {
         resource.setResourceCode(generateResourceCode(resource.getType()));
-        return resourceRepository.save(resource);
+        Resource createdResource = resourceRepository.save(resource);
+        notificationService.createResourceCreatedForUsers(createdResource);
+        return createdResource;
     }
 
     public List<Resource> getAllResources() {
