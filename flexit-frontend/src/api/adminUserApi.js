@@ -1,0 +1,18 @@
+import axios from "axios";
+
+const BASE_URL = "http://localhost:8081/api/auth/admin/users";
+
+export const getUserManagementSummary = async () => {
+  const response = await axios.get(`${BASE_URL}/summary`);
+  return response.data;
+};
+
+export const createTechnician = async (payload) => {
+  const response = await axios.post(`${BASE_URL}/technicians`, payload);
+  return response.data;
+};
+
+export const deleteTechnician = async (technicianId) => {
+  const response = await axios.delete(`${BASE_URL}/technicians/${technicianId}`);
+  return response.data;
+};

@@ -6,6 +6,8 @@ import TechnicianLayout from "../layouts/TechnicianLayout";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import AdminDashboard from "../pages/admin_dashboard/admin_dashboard";
+import AdminNotificationsPage from "../pages/admin_dashboard/AdminNotificationsPage";
+import AdminUserManagementPage from "../pages/admin_users/AdminUserManagementPage";
 import UserDashboardPage from "../pages/user/UserDashboardPage";
 import UserResourcesPage from "../pages/user/UserResourcesPage";
 import UserResourceDetailPage from "../pages/user/UserResourceDetailPage";
@@ -29,6 +31,7 @@ import { getSessionUser, isAuthenticated } from "../utils/sessionUser";
 
 import UpdateDetailsPage from "../pages/user/UpdateDetailsPage";
 import ChangePasswordPage from "../pages/user/ChangePasswordPage";
+import NotificationsPage from "../pages/user/NotificationsPage";
 
 
 function getDefaultRouteForRole(role) {
@@ -96,14 +99,16 @@ function AppRoutes() {
               <Route path="/user/tickets/create" element={<CreateTicketPage />} />
               <Route path="/user/tickets/:id" element={<TicketDetailsPage />} />
               <Route path="/user/tickets/edit/:id" element={<TicketEditPage />} />
-                      <Route path="/user/profile/update" element={<UpdateDetailsPage />} />
+              <Route path="/user/profile/update" element={<UpdateDetailsPage />} />
               <Route path="/user/profile/change-password" element={<ChangePasswordPage />} />
+              <Route path="/user/notifications" element={<NotificationsPage />} />
             </Route>
           </Route>
 
           <Route element={<RequireRole role="TECHNICIAN" />}>
             <Route element={<TechnicianLayout />}>
               <Route path="/technician/dashboard" element={<TechnicianDashboard />} />
+              <Route path="/technician/notifications" element={<NotificationsPage />} />
               <Route path="/technician/tickets/:id" element={<TicketDetailsPage />} />
               <Route path="/technician/tickets/edit/:id" element={<EditTicketPage />} />
             </Route>
@@ -112,6 +117,8 @@ function AppRoutes() {
           <Route element={<RequireRole role="ADMIN" />}>
             <Route element={<AdminLayout />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+              <Route path="/admin/users" element={<AdminUserManagementPage />} />
 
               <Route path="/resources" element={<ResourcesPage />} />
               <Route path="/resources/dashboard" element={<ResourceDashboardPage />} />

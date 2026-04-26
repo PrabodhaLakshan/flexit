@@ -86,7 +86,7 @@ function AdminNavbar() {
               >
                 Resources
                 <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-[#61CE70] group-hover:w-1/2 group-hover:-translate-x-1/2 transition-all duration-300 ease-out rounded-full"></span>
-              </a>
+              </button>
             </div>
           </div>
 

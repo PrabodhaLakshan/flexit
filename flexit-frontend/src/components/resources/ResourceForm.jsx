@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const EMPTY_FORM = {
   name: "",
@@ -20,16 +20,47 @@ const HOURS = Array.from({ length: 24 }, (_, i) =>
 const MINUTES = ["00", "15", "30", "45"];
 
 function TimePicker({ value, onChange, hasError }) {
-  const [hour, minute] = value ? value.split(":") : ["", ""];
+  const parseTime = (timeValue) => {
+    if (!timeValue) return ["", ""];
+    const [h = "", m = ""] = String(timeValue).split(":");
+    return [h, m];
+  };
+
+  const [hour, minute] = parseTime(value);
+  const [selectedHour, setSelectedHour] = useState(hour);
+  const [selectedMinute, setSelectedMinute] = useState(minute);
+
+  useEffect(() => {
+    setSelectedHour(hour);
+    setSelectedMinute(minute);
+  }, [hour, minute]);
 
   const handleHour = (e) => {
     const h = e.target.value;
-    onChange(h && minute ? `${h}:${minute || "00"}` : "");
+    if (!h) {
+      setSelectedHour("");
+      onChange("");
+      return;
+    }
+
+    const nextMinute = selectedMinute || "00";
+    setSelectedHour(h);
+    setSelectedMinute(nextMinute);
+    onChange(`${h}:${nextMinute}`);
   };
 
   const handleMinute = (e) => {
     const m = e.target.value;
-    onChange(hour && m ? `${hour}:${m}` : "");
+    if (!m) {
+      setSelectedMinute("");
+      onChange("");
+      return;
+    }
+
+    const nextHour = selectedHour || "00";
+    setSelectedHour(nextHour);
+    setSelectedMinute(m);
+    onChange(`${nextHour}:${m}`);
   };
 
   const base =
@@ -50,7 +81,7 @@ function TimePicker({ value, onChange, hasError }) {
 
       {/* Hour */}
       <select
-        value={hour || ""}
+        value={selectedHour || ""}
         onChange={handleHour}
         className={`${base} ${errorCls} w-24`}
       >
@@ -72,7 +103,7 @@ function TimePicker({ value, onChange, hasError }) {
 
       {/* Minute */}
       <select
-        value={minute || ""}
+        value={selectedMinute || ""}
         onChange={handleMinute}
         className={`${base} ${errorCls} w-24`}
       >
@@ -83,15 +114,15 @@ function TimePicker({ value, onChange, hasError }) {
       </select>
 
       {/* Live preview */}
-      {hour && minute && (
+      {selectedHour && selectedMinute && (
         <span className="ml-1 text-sm font-semibold text-[#0a192f] bg-gray-100 px-2 py-1 rounded-lg">
-          {Number(hour) === 0
-            ? `12:${minute} AM`
-            : Number(hour) < 12
-            ? `${Number(hour)}:${minute} AM`
-            : Number(hour) === 12
-            ? `12:${minute} PM`
-            : `${Number(hour) - 12}:${minute} PM`}
+          {Number(selectedHour) === 0
+            ? `12:${selectedMinute} AM`
+            : Number(selectedHour) < 12
+            ? `${Number(selectedHour)}:${selectedMinute} AM`
+            : Number(selectedHour) === 12
+            ? `12:${selectedMinute} PM`
+            : `${Number(selectedHour) - 12}:${selectedMinute} PM`}
         </span>
       )}
     </div>

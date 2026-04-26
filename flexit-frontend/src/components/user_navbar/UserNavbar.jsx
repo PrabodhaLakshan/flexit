@@ -2,37 +2,52 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getPasswordStatus } from "../../api/authApi";
-import { clearSessionUser, getSessionUser } from "../../utils/sessionUser";
 import {
   formatNotificationTime,
-  getNotificationCount,
-  getNotificationsForUser,
-  markNotificationAsRead,
-} from "../../utils/notifications";
+  getMyNotifications,
+  getMyUnreadNotificationCount,
+  markMyNotificationAsRead,
+} from "../../api/notificationApi";
+import { clearSessionUser, getSessionUser } from "../../utils/sessionUser";
 
 function UserNavbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const sessionUser = getSessionUser();
+  const notificationUserId = sessionUser.userCode || sessionUser.userId;
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [hasPassword, setHasPassword] = useState(() => sessionUser.hasPassword ?? true);
-  const [notifications, setNotifications] = useState(() =>
-    getNotificationsForUser(sessionUser.userId)
-  );
+  const [notifications, setNotifications] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
   const dropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
 
   const latestNotifications = useMemo(() => notifications.slice(0, 3), [notifications]);
-  const notificationCount = getNotificationCount(sessionUser.userId);
 
-  const refreshNotifications = () => {
-    setNotifications(getNotificationsForUser(sessionUser.userId));
+  const refreshNotifications = async () => {
+    if (!sessionUser.userId) {
+      setNotifications([]);
+      setNotificationCount(0);
+      return;
+    }
+
+    try {
+      const [items, unread] = await Promise.all([
+        getMyNotifications(notificationUserId, sessionUser.role, 30),
+        getMyUnreadNotificationCount(notificationUserId, sessionUser.role),
+      ]);
+
+      setNotifications(Array.isArray(items) ? items : []);
+      setNotificationCount(unread);
+    } catch (error) {
+      console.error("Failed to load notifications:", error);
+    }
   };
 
   useEffect(() => {
     refreshNotifications();
-  }, [sessionUser.userId]);
+  }, [notificationUserId, sessionUser.userId]);
 
   useEffect(() => {
     const fetchPasswordStatus = async () => {
@@ -51,7 +66,7 @@ function UserNavbar() {
     };
 
     fetchPasswordStatus();
-  }, [sessionUser.userId]);
+  }, [notificationUserId, sessionUser.userId]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -64,19 +79,11 @@ function UserNavbar() {
       }
     };
 
-    const handleStorage = (event) => {
-      if (!event.key || event.key === "flexitNotifications") {
-        refreshNotifications();
-      }
-    };
-
     window.addEventListener("mousedown", handleOutsideClick);
-    window.addEventListener("storage", handleStorage);
     window.addEventListener("focus", refreshNotifications);
 
     return () => {
       window.removeEventListener("mousedown", handleOutsideClick);
-      window.removeEventListener("storage", handleStorage);
       window.removeEventListener("focus", refreshNotifications);
     };
   }, [sessionUser.userId]);
@@ -101,13 +108,24 @@ function UserNavbar() {
     navigate("/user/profile/change-password");
   };
 
-  const handleNotificationClick = (notification) => {
-    markNotificationAsRead(notification.id, sessionUser.userId);
+  const handleNotificationClick = async (notification) => {
+    try {
+      await markMyNotificationAsRead(notification.id, notificationUserId, sessionUser.role);
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+
     refreshNotifications();
     setIsNotificationOpen(false);
 
     if (notification.actionUrl) {
-      navigate(notification.actionUrl);
+      const target = String(notification.actionUrl || "").trim();
+      if (target.startsWith("http://") || target.startsWith("https://")) {
+        window.open(target, "_blank", "noopener,noreferrer");
+      } else {
+        const safePath = target.startsWith("/") ? target : `/${target}`;
+        window.open(safePath, "_blank", "noopener,noreferrer");
+      }
       return;
     }
 
@@ -231,7 +249,7 @@ function UserNavbar() {
                   <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
                     <p className="text-sm font-semibold text-slate-900">{sessionUser.userName || "User"}</p>
                     <p className="mt-1 text-xs text-slate-600">{sessionUser.userEmail || "No email available"}</p>
-                    <p className="mt-1 text-xs text-slate-500">User ID: {sessionUser.userId || "N/A"}</p>
+                    <p className="mt-1 text-xs text-slate-500">User Code: {sessionUser.userCode || sessionUser.userId || "N/A"}</p>
                     <p className="text-xs text-slate-500">Role: {sessionUser.role || "USER"}</p>
                   </div>
 
