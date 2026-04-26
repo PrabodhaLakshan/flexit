@@ -121,10 +121,10 @@ function UserNavbar() {
     if (notification.actionUrl) {
       const target = String(notification.actionUrl || "").trim();
       if (target.startsWith("http://") || target.startsWith("https://")) {
-        window.location.assign(target);
+        window.open(target, "_blank", "noopener,noreferrer");
       } else {
         const safePath = target.startsWith("/") ? target : `/${target}`;
-        navigate(safePath);
+        window.open(safePath, "_blank", "noopener,noreferrer");
       }
       return;
     }
