@@ -92,7 +92,7 @@ export function getTechnicians() {
 
     const technicians = Array.isArray(response.technicians) ? response.technicians : [];
     return technicians.map((tech) => ({
-      id: tech.id,
+      id: tech.userCode || tech.id,
       name: tech.fullName || tech.name || "",
     }));
   });
