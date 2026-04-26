@@ -20,9 +20,17 @@ public class Notification {
 
     private NotificationType type;
     private String title;
+    private String subject;
     private String message;
     private String actionUrl;
     private boolean isRead;
+
+    @Indexed
+    private String senderUserId;
+
+    private String senderName;
+
+    private UserRole senderRole;
 
     @Indexed
     private LocalDateTime createdAt;
@@ -78,6 +86,14 @@ public class Notification {
         this.message = message;
     }
 
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
     public String getActionUrl() {
         return actionUrl;
     }
@@ -92,6 +108,30 @@ public class Notification {
 
     public void setRead(boolean read) {
         isRead = read;
+    }
+
+    public String getSenderUserId() {
+        return senderUserId;
+    }
+
+    public void setSenderUserId(String senderUserId) {
+        this.senderUserId = senderUserId;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
+
+    public UserRole getSenderRole() {
+        return senderRole;
+    }
+
+    public void setSenderRole(UserRole senderRole) {
+        this.senderRole = senderRole;
     }
 
     public LocalDateTime getCreatedAt() {

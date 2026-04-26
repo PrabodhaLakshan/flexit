@@ -1,5 +1,6 @@
 package com.flexit.controller;
 
+import com.flexit.dto.AdminNotificationCreateRequest;
 import com.flexit.model.Notification;
 import com.flexit.service.NotificationService;
 import org.springframework.http.ResponseEntity;
@@ -63,5 +64,20 @@ public class NotificationController {
                         request.get("fullName")
                 )
         );
+    }
+
+    @PostMapping("/admin/broadcast")
+    public ResponseEntity<List<Notification>> createAdminBroadcast(
+            @RequestBody AdminNotificationCreateRequest request
+    ) {
+        return ResponseEntity.ok(notificationService.createAdminBroadcast(request));
+    }
+
+    @GetMapping("/admin/sent")
+    public ResponseEntity<List<Notification>> getAdminSentNotifications(
+            @RequestParam(required = false) String senderUserId,
+            @RequestParam(required = false) Integer limit
+    ) {
+        return ResponseEntity.ok(notificationService.getSentNotificationsForUser(senderUserId, limit));
     }
 }

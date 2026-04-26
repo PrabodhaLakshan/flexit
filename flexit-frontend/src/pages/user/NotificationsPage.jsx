@@ -41,7 +41,13 @@ function NotificationsPage() {
     }
 
     if (notification.actionUrl) {
-      navigate(notification.actionUrl);
+      const target = String(notification.actionUrl || "").trim();
+      if (target.startsWith("http://") || target.startsWith("https://")) {
+        window.location.assign(target);
+      } else {
+        const safePath = target.startsWith("/") ? target : `/${target}`;
+        navigate(safePath);
+      }
     }
   };
 

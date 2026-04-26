@@ -12,6 +12,8 @@ public interface NotificationRepository extends MongoRepository<Notification, St
 
     List<Notification> findByRecipientRoleOrderByCreatedAtDesc(UserRole recipientRole);
 
+    List<Notification> findBySenderUserIdOrderByCreatedAtDesc(String senderUserId);
+
     long countByRecipientUserIdAndIsReadFalse(String recipientUserId);
 
     long countByRecipientRoleAndIsReadFalse(UserRole recipientRole);

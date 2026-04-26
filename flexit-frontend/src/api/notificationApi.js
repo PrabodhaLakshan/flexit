@@ -36,6 +36,38 @@ export const createLoginNotification = async ({ userId, role, fullName }) => {
   return response.data;
 };
 
+export const createAdminBroadcastNotification = async ({
+  senderUserId,
+  senderRole,
+  senderName,
+  audiences,
+  title,
+  subject,
+  message,
+  actionUrl,
+}) => {
+  const response = await axios.post(`${API_BASE_URL}/admin/broadcast`, {
+    senderUserId,
+    senderRole,
+    senderName,
+    audiences,
+    title,
+    subject,
+    message,
+    actionUrl,
+  });
+
+  return response.data || [];
+};
+
+export const getAdminSentNotifications = async (senderUserId, limit = 200) => {
+  const response = await axios.get(`${API_BASE_URL}/admin/sent`, {
+    params: { senderUserId, limit },
+  });
+
+  return response.data || [];
+};
+
 export const formatNotificationTime = (value) => {
   const time = new Date(value);
   if (Number.isNaN(time.getTime())) return "Just now";

@@ -1,5 +1,6 @@
 package com.flexit.service;
 
+import com.flexit.dto.AdminNotificationCreateRequest;
 import com.flexit.model.Booking;
 import com.flexit.model.Notification;
 import com.flexit.model.NotificationType;
@@ -12,10 +13,12 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class NotificationService {
@@ -40,9 +43,13 @@ public class NotificationService {
         notification.setRecipientRole(null);
         notification.setType(type == null ? NotificationType.GENERAL : type);
         notification.setTitle(title);
+        notification.setSubject(title);
         notification.setMessage(message);
-        notification.setActionUrl(actionUrl);
+        notification.setActionUrl(normalizeActionUrl(actionUrl));
         notification.setRead(false);
+        notification.setSenderUserId("SYSTEM");
+        notification.setSenderName("System");
+        notification.setSenderRole(null);
         notification.setCreatedAt(LocalDateTime.now());
         return notificationRepository.save(notification);
     }
@@ -61,11 +68,90 @@ public class NotificationService {
         notification.setRecipientRole(role);
         notification.setType(type == null ? NotificationType.GENERAL : type);
         notification.setTitle(title);
+        notification.setSubject(title);
         notification.setMessage(message);
-        notification.setActionUrl(actionUrl);
+        notification.setActionUrl(normalizeActionUrl(actionUrl));
         notification.setRead(false);
+        notification.setSenderUserId("SYSTEM");
+        notification.setSenderName("System");
+        notification.setSenderRole(null);
         notification.setCreatedAt(LocalDateTime.now());
         return notificationRepository.save(notification);
+    }
+
+    public List<Notification> createAdminBroadcast(AdminNotificationCreateRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request is required");
+        }
+
+        String senderUserId = normalize(request.getSenderUserId());
+        if (senderUserId.isBlank()) {
+            throw new IllegalArgumentException("Sender user id is required");
+        }
+
+        UserRole senderRole = parseRole(request.getSenderRole());
+        if (senderRole != UserRole.ADMIN) {
+            throw new IllegalArgumentException("Only admins can create broadcast notifications");
+        }
+
+        String title = normalize(request.getTitle());
+        String subject = normalize(request.getSubject());
+        String message = normalize(request.getMessage());
+
+        if (title.isBlank()) {
+            throw new IllegalArgumentException("Title is required");
+        }
+
+        if (subject.isBlank()) {
+            subject = title;
+        }
+
+        if (message.isBlank()) {
+            throw new IllegalArgumentException("Notification message is required");
+        }
+
+        String senderName = normalize(request.getSenderName());
+        if (senderName.isBlank()) {
+            senderName = "Admin";
+        }
+
+        String actionUrl = normalizeActionUrl(request.getActionUrl());
+
+        Set<UserRole> recipientRoles = resolveRecipientRoles(request.getAudiences());
+        if (recipientRoles.isEmpty()) {
+            throw new IllegalArgumentException("At least one audience is required");
+        }
+
+        List<Notification> createdNotifications = new ArrayList<>();
+        for (UserRole role : recipientRoles) {
+            Notification notification = new Notification();
+            notification.setRecipientUserId(null);
+            notification.setRecipientRole(role);
+            notification.setType(NotificationType.GENERAL);
+            notification.setTitle(title);
+            notification.setSubject(subject);
+            notification.setMessage(message);
+            notification.setActionUrl(actionUrl);
+            notification.setRead(false);
+            notification.setSenderUserId(senderUserId);
+            notification.setSenderName(senderName);
+            notification.setSenderRole(UserRole.ADMIN);
+            notification.setCreatedAt(LocalDateTime.now());
+            createdNotifications.add(notificationRepository.save(notification));
+        }
+
+        return createdNotifications;
+    }
+
+    public List<Notification> getSentNotificationsForUser(String senderUserId, Integer limit) {
+        String normalizedSenderUserId = normalize(senderUserId);
+        if (normalizedSenderUserId.isBlank()) {
+            return List.of();
+        }
+
+        List<Notification> items = notificationRepository.findBySenderUserIdOrderByCreatedAtDesc(normalizedSenderUserId);
+        int safeLimit = limit == null || limit <= 0 ? 100 : Math.min(limit, 300);
+        return items.stream().limit(safeLimit).toList();
     }
 
     public void createBookingCreatedForAdmins(Booking booking) {
@@ -263,6 +349,50 @@ public class NotificationService {
         return userMatch || roleMatch;
     }
 
+    private Set<UserRole> resolveRecipientRoles(List<String> audiences) {
+        if (audiences == null || audiences.isEmpty()) {
+            return Set.of();
+        }
+
+        Set<UserRole> roles = new HashSet<>();
+
+        for (String audience : audiences) {
+            String normalizedAudience = normalize(audience).toUpperCase(Locale.ENGLISH);
+            if (normalizedAudience.isBlank()) {
+                continue;
+            }
+
+            if ("ALL".equals(normalizedAudience) || "TO_ALL".equals(normalizedAudience)) {
+                roles.add(UserRole.USER);
+                roles.add(UserRole.TECHNICIAN);
+                roles.add(UserRole.ADMIN);
+                continue;
+            }
+
+            if ("USERS".equals(normalizedAudience) || "TO_USERS".equals(normalizedAudience)) {
+                roles.add(UserRole.USER);
+                continue;
+            }
+
+            if ("TECHNICIANS".equals(normalizedAudience) || "TO_TECHNICIANS".equals(normalizedAudience)) {
+                roles.add(UserRole.TECHNICIAN);
+                continue;
+            }
+
+            if ("ADMINS".equals(normalizedAudience) || "TO_ADMINS".equals(normalizedAudience)) {
+                roles.add(UserRole.ADMIN);
+                continue;
+            }
+
+            UserRole parsed = parseRole(normalizedAudience);
+            if (parsed != null) {
+                roles.add(parsed);
+            }
+        }
+
+        return roles;
+    }
+
     private UserRole parseRole(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -282,5 +412,23 @@ public class NotificationService {
     private String safeValue(String value) {
         String normalized = normalize(value);
         return normalized.isBlank() ? "Unknown user" : normalized;
+    }
+
+    private String normalizeActionUrl(String value) {
+        String normalized = normalize(value);
+        if (normalized.isBlank()) {
+            return "/admin/notifications";
+        }
+
+        String lower = normalized.toLowerCase(Locale.ENGLISH);
+        if (lower.startsWith("http://") || lower.startsWith("https://")) {
+            return normalized;
+        }
+
+        if (!normalized.startsWith("/")) {
+            return "/" + normalized;
+        }
+
+        return normalized;
     }
 }
