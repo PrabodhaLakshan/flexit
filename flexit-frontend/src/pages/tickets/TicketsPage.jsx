@@ -101,6 +101,7 @@ function TicketsPage() {
   const [rejectedCount, setRejectedCount] = useState(0);
   const [popup, setPopup] = useState(null);
   const [selectedTicketForReview, setSelectedTicketForReview] = useState(null);
+  const [selectedTicketForClose, setSelectedTicketForClose] = useState(null);
   const [previewImageUrl, setPreviewImageUrl] = useState("");
   const [previewZoom, setPreviewZoom] = useState(1);
   const [previewOrigin, setPreviewOrigin] = useState({ x: 50, y: 50 });
@@ -466,14 +467,14 @@ function TicketsPage() {
       const message = "Reject action needs a technician selection.";
       setActionError(message);
       showPopup("error", message);
-      return;
+      return false;
     }
 
     if (countWords(notes) < 5) {
       const message = "Reject reason is required with at least 5 words.";
       setActionError(message);
       showPopup("error", message);
-      return;
+      return false;
     }
 
     const success = await runAction(
@@ -494,6 +495,8 @@ function TicketsPage() {
       });
       showPopup("success", `Ticket ${ticket.id} rejected and deleted.`);
     }
+
+    return success;
   };
 
   const handleClose = async (ticket) => {
@@ -504,14 +507,14 @@ function TicketsPage() {
       const message = "Close reason is required with at least 5 words.";
       setActionError(message);
       showPopup("error", message);
-      return;
+      return false;
     }
 
     if (!userId) {
       const message = "Close action failed: reporter user ID is missing on this ticket.";
       setActionError(message);
       showPopup("error", message);
-      return;
+      return false;
     }
 
     const success = await runAction(
@@ -537,6 +540,8 @@ function TicketsPage() {
       });
       showPopup("success", `Ticket ${ticket.id} closed and removed.`);
     }
+
+    return success;
   };
 
   const isActionLoading = (ticketId) => actionLoadingId === ticketId;
@@ -547,6 +552,14 @@ function TicketsPage() {
 
   const closeReviewModal = () => {
     setSelectedTicketForReview(null);
+  };
+
+  const openCloseModal = (ticket) => {
+    setSelectedTicketForClose(ticket);
+  };
+
+  const closeCloseModal = () => {
+    setSelectedTicketForClose(null);
   };
 
   const openImagePreview = (imageUrl) => {
@@ -789,6 +802,23 @@ function TicketsPage() {
                 </div>
               ) : null}
 
+              <div className="rounded-xl border border-rose-200 bg-rose-50/40 p-3">
+                <p className="text-xs font-semibold text-rose-700">Reject reason</p>
+                <p className="mt-1 text-xs text-rose-700/80">At least 5 words.</p>
+                <textarea
+                  rows={3}
+                  value={rejectReasonByTicket[selectedTicketForReview.id] || ""}
+                  onChange={(event) =>
+                    setRejectReasonByTicket((previous) => ({
+                      ...previous,
+                      [selectedTicketForReview.id]: event.target.value,
+                    }))
+                  }
+                  placeholder="Explain why this ticket is rejected..."
+                  className="mt-3 w-full rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-200/40"
+                />
+              </div>
+
               <div className="mt-6 flex gap-3">
                 <button
                   type="button"
@@ -799,14 +829,94 @@ function TicketsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    handleReject(selectedTicketForReview);
-                    closeReviewModal();
+                  onClick={async () => {
+                    const success = await handleReject(selectedTicketForReview);
+                    if (success) {
+                      closeReviewModal();
+                    }
                   }}
                   disabled={isActionLoading(selectedTicketForReview.id)}
                   className="flex-1 rounded-lg bg-rose-600 px-4 py-2 font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
                 >
                   {isActionLoading(selectedTicketForReview.id) ? "Rejecting..." : "Confirm Reject"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {selectedTicketForClose ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4">
+          <div className="absolute inset-0" onClick={closeCloseModal} />
+          <div className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl border border-emerald-300/30 bg-linear-to-br from-white via-slate-50 to-emerald-50 p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-slate-900">Close Ticket</h2>
+              <button
+                type="button"
+                onClick={closeCloseModal}
+                className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-300"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-semibold text-slate-500">Ticket ID</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{selectedTicketForClose.id}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-semibold text-slate-500">Reporter</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">
+                    {selectedTicketForClose.reportedByUserName || selectedTicketForClose.reportedByUserId || "Unknown"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <p className="text-xs font-semibold text-slate-500">Title</p>
+                <p className="mt-1 text-sm font-medium text-slate-900">{selectedTicketForClose.title}</p>
+              </div>
+
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3">
+                <p className="text-xs font-semibold text-emerald-800">Close reason</p>
+                <p className="mt-1 text-xs text-emerald-800/80">At least 5 words.</p>
+                <textarea
+                  rows={3}
+                  value={closeNoteByTicket[selectedTicketForClose.id] || ""}
+                  onChange={(event) =>
+                    setCloseNoteByTicket((previous) => ({
+                      ...previous,
+                      [selectedTicketForClose.id]: event.target.value,
+                    }))
+                  }
+                  placeholder="Write a closing note..."
+                  className="mt-3 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/40"
+                />
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={closeCloseModal}
+                  className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const success = await handleClose(selectedTicketForClose);
+                    if (success) {
+                      closeCloseModal();
+                    }
+                  }}
+                  disabled={isActionLoading(selectedTicketForClose.id)}
+                  className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+                >
+                  {isActionLoading(selectedTicketForClose.id) ? "Closing..." : "Confirm Close"}
                 </button>
               </div>
             </div>
@@ -938,7 +1048,6 @@ function TicketsPage() {
                   <th className="w-[8%] px-4 py-3 font-semibold">Category</th>
                   <th className="w-[7%] px-4 py-3 font-semibold">Priority</th>
                   <th className="w-[8%] px-4 py-3 font-semibold">Status</th>
-                  <th className="w-[10%] px-4 py-3 font-semibold">Assigned</th>
                   <th className="w-[11%] px-4 py-3 font-semibold">Assign</th>
                   <th className="w-[11%] px-4 py-3 font-semibold">Reject</th>
                   <th className="w-[11%] px-4 py-3 font-semibold">Close</th>
@@ -947,7 +1056,7 @@ function TicketsPage() {
               <tbody>
                 {filteredTickets.map((ticket) => (
                   <tr key={ticket.id} className="border-t border-slate-100 align-top transition hover:bg-cyan-50/50">
-                    <td className="px-4 py-4 break-words">
+                    <td className="px-4 py-4 wrap-break-word">
                       <p className="font-semibold text-slate-900">{ticket.title}</p>
                       <p className="text-xs text-slate-500 mt-1">ID: {ticket.id}</p>
                       <Link
@@ -957,30 +1066,18 @@ function TicketsPage() {
                         View Image and Details
                       </Link>
                     </td>
-                    <td className="px-4 py-4 break-words">
+                    <td className="px-4 py-4 wrap-break-word">
                       <p className="text-slate-900">{ticket.reportedByUserName || "N/A"}</p>
                       <p className="text-xs text-slate-500 mt-1">{ticket.reportedByUserId || "No user ID"}</p>
                     </td>
-                    <td className="px-4 py-4 break-words text-slate-800">
+                    <td className="px-4 py-4 wrap-break-word text-slate-800">
                       {ticket.assetFacility || "N/A"}
                     </td>
-                    <td className="px-4 py-4 break-words text-slate-800">
+                    <td className="px-4 py-4 wrap-break-word text-slate-800">
                       {ticket.category || "N/A"}
                     </td>
                     <td className="px-4 py-4 font-medium text-slate-800">{ticket.priority || "MEDIUM"}</td>
                     <td className="px-4 py-4 font-medium text-slate-800">{ticket.status || "OPEN"}</td>
-                    <td className="px-4 py-4 break-words">
-                      <p className="text-slate-900">
-                        {ticket.assignedTechnicianId
-                          ? ticket.assignedTechnicianName
-                            ? `${ticket.assignedTechnicianName} (${ticket.assignedTechnicianId})`
-                            : `Assigned (${ticket.assignedTechnicianId})`
-                          : "Unassigned"}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {ticket.assignedTechnicianId || "Unassigned"}
-                      </p>
-                    </td>
                     <td className="px-4 py-4 space-y-2">
                       <select
                         value={selectedTechnicianByTicket[ticket.id] || ""}
@@ -999,17 +1096,6 @@ function TicketsPage() {
                           </option>
                         ))}
                       </select>
-                      <input
-                        value={customTechnicianByTicket[ticket.id] || ""}
-                        onChange={(event) =>
-                          setCustomTechnicianByTicket((previous) => ({
-                            ...previous,
-                            [ticket.id]: event.target.value,
-                          }))
-                        }
-                        placeholder="or type tech ID"
-                        className="w-full rounded-xl border border-cyan-200 bg-white px-3 py-2 text-xs outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/40"
-                      />
                       <button
                         type="button"
                         onClick={() => handleAssign(ticket)}
@@ -1020,18 +1106,6 @@ function TicketsPage() {
                       </button>
                     </td>
                     <td className="px-4 py-4 space-y-2">
-                      <textarea
-                        rows={2}
-                        value={rejectReasonByTicket[ticket.id] || ""}
-                        onChange={(event) =>
-                          setRejectReasonByTicket((previous) => ({
-                            ...previous,
-                            [ticket.id]: event.target.value,
-                          }))
-                        }
-                        placeholder="Reject reason (at least 5 words)"
-                        className="w-full rounded-xl border border-rose-200 bg-rose-50/40 px-3 py-2 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-200/40"
-                      />
                       <button
                         type="button"
                         onClick={() => openReviewModal(ticket)}
@@ -1042,21 +1116,9 @@ function TicketsPage() {
                       </button>
                     </td>
                     <td className="px-4 py-4 space-y-2">
-                      <textarea
-                        rows={2}
-                        value={closeNoteByTicket[ticket.id] || ""}
-                        onChange={(event) =>
-                          setCloseNoteByTicket((previous) => ({
-                            ...previous,
-                            [ticket.id]: event.target.value,
-                          }))
-                        }
-                        placeholder="Close reason (at least 5 words)"
-                        className="w-full rounded-xl border border-emerald-200 bg-emerald-50/40 px-3 py-2 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/40"
-                      />
                       <button
                         type="button"
-                        onClick={() => handleClose(ticket)}
+                        onClick={() => openCloseModal(ticket)}
                         disabled={isActionLoading(ticket.id)}
                         className="block w-full rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
                       >
