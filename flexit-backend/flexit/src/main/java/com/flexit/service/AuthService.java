@@ -1,11 +1,15 @@
 package com.flexit.service;
 
 import com.flexit.dto.AuthResponse;
+import com.flexit.dto.CreateTechnicianRequest;
 import com.flexit.dto.GoogleLoginRequest;
 import com.flexit.dto.LoginRequest;
 import com.flexit.dto.PasswordChangeRequest;
 import com.flexit.dto.PasswordStatusResponse;
+import com.flexit.dto.RegisteredTechnicianResponse;
+import com.flexit.dto.RegisteredUserResponse;
 import com.flexit.dto.SignupRequest;
+import com.flexit.dto.UserManagementSummaryResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -21,12 +25,13 @@ import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -42,7 +47,7 @@ public class AuthService {
                        @Value("${google.oauth.client-id}") String googleClientId) {
         this.userRepository = userRepository;
         this.mongoOperations = mongoOperations;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
         this.googleIdTokenVerifier = 
         new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(),
@@ -148,6 +153,89 @@ public class AuthService {
 
         boolean hasPassword = user.getPasswordHash() != null && !user.getPasswordHash().isBlank();
         return new PasswordStatusResponse(user.getId(), hasPassword);
+    }
+
+    public UserManagementSummaryResponse getUserManagementSummary() {
+        long userCount = userRepository.countByRole(UserRole.USER);
+        long technicianCount = userRepository.countByRole(UserRole.TECHNICIAN);
+        long adminCount = userRepository.countByRole(UserRole.ADMIN);
+
+        List<RegisteredTechnicianResponse> technicians = userRepository.findByRole(UserRole.TECHNICIAN)
+                .stream()
+                .sorted(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .map(user -> new RegisteredTechnicianResponse(
+                        user.getId(),
+                        user.getUserCode(),
+                        user.getFullName(),
+                        user.getEmail(),
+                user.getContactNumber(),
+                user.getCategories(),
+                user.getAssignedArea(),
+                        user.getCreatedAt()
+                ))
+                .toList();
+
+            List<RegisteredUserResponse> users = userRepository.findByRole(UserRole.USER)
+                .stream()
+                .sorted(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .map(user -> new RegisteredUserResponse(
+                    user.getId(),
+                    user.getUserCode(),
+                    user.getFullName(),
+                    user.getEmail(),
+                    user.getRole() == null ? UserRole.USER.name() : user.getRole().name(),
+                    user.getCreatedAt()
+                ))
+                .toList();
+
+            return new UserManagementSummaryResponse(userCount, technicianCount, adminCount, technicians, users);
+    }
+
+    public AuthResponse createTechnician(CreateTechnicianRequest request) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+
+        if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+            throw new UserAlreadyExistsException("Email is already registered");
+        }
+
+        User technician = new User();
+        technician.setFullName(request.getFullName().trim());
+        technician.setEmail(normalizedEmail);
+        technician.setPasswordHash(null);
+        technician.setContactNumber(request.getContactNumber().trim());
+        technician.setCategories(request.getCategories().stream().map(String::trim).filter(value -> !value.isBlank()).distinct().toList());
+        technician.setAssignedArea(request.getAssignedArea().trim());
+        technician.setRole(UserRole.TECHNICIAN);
+        technician.setUserCode(generateNextUserCode());
+        technician.setCreatedAt(LocalDateTime.now());
+
+        User savedTechnician = userRepository.save(technician);
+
+        return new AuthResponse(
+                "Technician account created successfully",
+                savedTechnician.getId(),
+                savedTechnician.getUserCode(),
+                savedTechnician.getFullName(),
+                savedTechnician.getEmail(),
+                UserRole.TECHNICIAN.name(),
+            false
+        );
+    }
+
+    public void deleteTechnician(String technicianId) {
+        String safeTechnicianId = Objects.requireNonNullElse(technicianId, "").trim();
+        if (safeTechnicianId.isBlank()) {
+            throw new IllegalArgumentException("Technician id is required");
+        }
+
+        User technician = userRepository.findById(safeTechnicianId)
+                .orElseThrow(() -> new IllegalArgumentException("Technician not found"));
+
+        if (technician.getRole() != UserRole.TECHNICIAN) {
+            throw new IllegalArgumentException("Only technician accounts can be removed from this list");
+        }
+
+        userRepository.delete(technician);
     }
 
     public AuthResponse setOrChangePassword(PasswordChangeRequest request) {

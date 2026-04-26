@@ -14,4 +14,6 @@ public interface UserRepository extends MongoRepository<User, String> {
     boolean existsByEmailIgnoreCase(String email);
 
     List<User> findByRole(UserRole role);
+
+    long countByRole(UserRole role);
 }

@@ -1,52 +1,37 @@
-package com.flexit.model;
-
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+package com.flexit.dto;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
-@Document(collection = "users")
-public class User {
+public class RegisteredTechnicianResponse {
 
-    @Id
     private String id;
-
-    @NotBlank(message = "Full name is required")
-    private String fullName;
-
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
-    @Indexed(unique = true)
-    private String email;
-
-    private String passwordHash;
-
-    private String contactNumber;
-
-    private List<String> categories = new ArrayList<>();
-
-    private String assignedArea;
-
-    @Indexed(unique = true, sparse = true)
     private String userCode;
-
-    private UserRole role;
-
+    private String fullName;
+    private String email;
+    private String contactNumber;
+    private List<String> categories;
+    private String assignedArea;
     private LocalDateTime createdAt;
 
-    public User() {
+    public RegisteredTechnicianResponse() {
     }
 
-    public User(String id, String fullName, String email, String passwordHash, LocalDateTime createdAt) {
+    public RegisteredTechnicianResponse(String id,
+                                        String userCode,
+                                        String fullName,
+                                        String email,
+                                        String contactNumber,
+                                        List<String> categories,
+                                        String assignedArea,
+                                        LocalDateTime createdAt) {
         this.id = id;
+        this.userCode = userCode;
         this.fullName = fullName;
         this.email = email;
-        this.passwordHash = passwordHash;
+        this.contactNumber = contactNumber;
+        this.categories = categories;
+        this.assignedArea = assignedArea;
         this.createdAt = createdAt;
     }
 
@@ -56,6 +41,14 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUserCode() {
+        return userCode;
+    }
+
+    public void setUserCode(String userCode) {
+        this.userCode = userCode;
     }
 
     public String getFullName() {
@@ -72,14 +65,6 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
     }
 
     public String getContactNumber() {
@@ -104,22 +89,6 @@ public class User {
 
     public void setAssignedArea(String assignedArea) {
         this.assignedArea = assignedArea;
-    }
-
-    public String getUserCode() {
-        return userCode;
-    }
-
-    public void setUserCode(String userCode) {
-        this.userCode = userCode;
-    }
-
-    public UserRole getRole() {
-        return role;
-    }
-
-    public void setRole(UserRole role) {
-        this.role = role;
     }
 
     public LocalDateTime getCreatedAt() {
