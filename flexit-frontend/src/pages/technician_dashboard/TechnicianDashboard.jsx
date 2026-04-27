@@ -187,6 +187,19 @@ function mergeResolvedTickets(activeTickets, cachedTickets) {
 
 function TechnicianDashboard() {
   const sessionUser = useMemo(() => getSessionUser(), []);
+  const technicianIdentity = useMemo(
+    () => (sessionUser.userCode || sessionUser.userId || "").trim(),
+    [sessionUser.userCode, sessionUser.userId]
+  );
+  const technicianIds = useMemo(
+    () =>
+      new Set(
+        [sessionUser.userId, sessionUser.userCode]
+          .map((value) => (value || "").trim())
+          .filter(Boolean)
+      ),
+    [sessionUser.userId, sessionUser.userCode]
+  );
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -204,8 +217,8 @@ function TechnicianDashboard() {
   });
 
   useEffect(() => {
-    setResolvedHistory(readResolvedCache(sessionUser.userId));
-  }, [sessionUser.userId]);
+    setResolvedHistory(readResolvedCache(technicianIdentity));
+  }, [technicianIdentity]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -221,14 +234,14 @@ function TechnicianDashboard() {
 
     try {
       const allTickets = await getAllTickets();
-      const hiddenResolvedIds = new Set(readHiddenResolvedIds(sessionUser.userId));
+      const hiddenResolvedIds = new Set(readHiddenResolvedIds(technicianIdentity));
       const assignedToCurrentTech = (Array.isArray(allTickets) ? allTickets : []).filter(
-        (ticket) => (ticket.assignedTechnicianId || "").trim() === sessionUser.userId.trim()
+        (ticket) => technicianIds.has((ticket.assignedTechnicianId || "").trim())
       );
 
       const assignedTickets = (Array.isArray(allTickets) ? allTickets : []).filter(
         (ticket) => {
-          const isAssignedToCurrentTech = (ticket.assignedTechnicianId || "").trim() === sessionUser.userId.trim();
+          const isAssignedToCurrentTech = technicianIds.has((ticket.assignedTechnicianId || "").trim());
           const isHiddenResolved = (ticket.status || "OPEN") === "RESOLVED" && hiddenResolvedIds.has(ticket.id);
           return isAssignedToCurrentTech && !isHiddenResolved;
         }
@@ -242,7 +255,7 @@ function TechnicianDashboard() {
       setAnalytics({
         totalResolved: resolvedTickets.length,
         pendingTasks: pendingTasks.length,
-        averageResolutionTime: calculateAverageResolutionHours(resolvedTickets, sessionUser.userId),
+        averageResolutionTime: calculateAverageResolutionHours(resolvedTickets, technicianIdentity),
       });
 
       setTickets(assignedTickets);
@@ -318,7 +331,7 @@ function TechnicianDashboard() {
       await updateTicketStatus(ticket.id, {
         status: form.status,
         notes: form.notes,
-        techId: sessionUser.userId,
+        techId: (ticket.assignedTechnicianId || technicianIdentity).trim(),
       });
 
       // If RESOLVED, remove immediately from display and show completion message
@@ -332,7 +345,7 @@ function TechnicianDashboard() {
 
         setResolvedHistory((previous) => {
           const merged = mergeResolvedTickets([resolvedSnapshot], previous);
-          writeResolvedCache(sessionUser.userId, merged);
+          writeResolvedCache(technicianIdentity, merged);
           return merged;
         });
 
@@ -358,7 +371,7 @@ function TechnicianDashboard() {
     }
 
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-    const fileName = `technician_report_${(sessionUser.userId || "technician").replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    const fileName = `technician_report_${(technicianIdentity || "technician").replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`;
 
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
@@ -366,7 +379,7 @@ function TechnicianDashboard() {
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Technician: ${sessionUser.userName || "Technician"} (${sessionUser.userId || "N/A"})`, 14, 23);
+    doc.text(`Technician: ${sessionUser.userName || "Technician"} (${technicianIdentity || "N/A"})`, 14, 23);
     doc.text(`Generated on: ${formatDate(new Date())}`, 14, 29);
     doc.text(`Resolved tickets: ${resolvedTickets.length}`, 14, 35);
 
@@ -374,7 +387,7 @@ function TechnicianDashboard() {
       startY: 41,
       head: [["Ticket ID", "Title", "Priority", "Resolved At", "Notes"]],
       body: resolvedTickets.map((ticket) => {
-        const latestComment = getLatestTechnicianComment(ticket, sessionUser.userId);
+        const latestComment = getLatestTechnicianComment(ticket, ticket.assignedTechnicianId || technicianIdentity);
         return [
           ticket.id || "N/A",
           ticket.title || "N/A",
@@ -407,7 +420,7 @@ function TechnicianDashboard() {
     let currentY = doc.lastAutoTable.finalY + 10;
 
     resolvedTickets.forEach((ticket, index) => {
-      const latestComment = getLatestTechnicianComment(ticket, sessionUser.userId);
+      const latestComment = getLatestTechnicianComment(ticket, ticket.assignedTechnicianId || technicianIdentity);
       const completionNote = latestComment?.text || ticket.resolutionNotes || "No completion note provided.";
       const attachmentUrl = latestComment?.imageUrl || "";
 
@@ -457,14 +470,14 @@ function TechnicianDashboard() {
     const downloadedResolvedIds = resolvedTickets.map((ticket) => ticket.id).filter(Boolean);
 
     if (downloadedResolvedIds.length) {
-      writeHiddenResolvedIds(sessionUser.userId, downloadedResolvedIds);
+      writeHiddenResolvedIds(technicianIdentity, downloadedResolvedIds);
       setTickets((previous) =>
         previous.filter(
           (ticket) => !((ticket.status || "OPEN") === "RESOLVED" && downloadedResolvedIds.includes(ticket.id))
         )
       );
       setResolvedHistory([]);
-      writeResolvedCache(sessionUser.userId, []);
+      writeResolvedCache(technicianIdentity, []);
     }
 
     setMessage(`PDF report downloaded and ${resolvedTickets.length} resolved ticket${resolvedTickets.length === 1 ? "" : "s"} removed from dashboard.`);
@@ -505,7 +518,7 @@ function TechnicianDashboard() {
             You can update only your assigned tickets to IN_PROGRESS or RESOLVED and add resolution notes.
           </p>
           <p className="mt-3 text-xs text-slate-300">
-            Logged in as: {sessionUser.userName || "Technician"} ({sessionUser.userId || "No user ID"})
+            Logged in as: {sessionUser.userName || "Technician"} ({technicianIdentity || "No user ID"})
           </p>
 
           <div className="mt-5 flex flex-wrap items-end gap-3">
@@ -580,7 +593,7 @@ function TechnicianDashboard() {
         <div className="space-y-4">
           {filteredTickets.map((ticket) => {
             const form = formByTicket[ticket.id] || { status: "IN_PROGRESS", notes: "" };
-            const slaMeta = getSlaTimerMeta(ticket, nowMs, sessionUser.userId);
+            const slaMeta = getSlaTimerMeta(ticket, nowMs, ticket.assignedTechnicianId || technicianIdentity);
 
             return (
               <article

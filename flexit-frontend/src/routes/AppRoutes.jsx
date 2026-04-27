@@ -13,6 +13,7 @@ import UserResourcesPage from "../pages/user/UserResourcesPage";
 import UserResourceDetailPage from "../pages/user/UserResourceDetailPage";
 import UserDashboard from "../pages/user_dashboard/UserDashboard";
 import TechnicianDashboard from "../pages/technician_dashboard/TechnicianDashboard";
+import TechnicianResolvedTicketsPage from "../pages/technician_dashboard/TechnicianResolvedTicketsPage";
 import ResourcesPage from "../pages/resources/ResourcesPage";
 import CreateResourcePage from "../pages/resources/CreateResourcePage";
 import EditResourcePage from "../pages/resources/EditResourcePage";
@@ -108,6 +109,7 @@ function AppRoutes() {
           <Route element={<RequireRole role="TECHNICIAN" />}>
             <Route element={<TechnicianLayout />}>
               <Route path="/technician/dashboard" element={<TechnicianDashboard />} />
+              <Route path="/technician/resolved-tickets" element={<TechnicianResolvedTicketsPage />} />
               <Route path="/technician/notifications" element={<NotificationsPage />} />
               <Route path="/technician/tickets/:id" element={<TicketDetailsPage />} />
               <Route path="/technician/tickets/edit/:id" element={<EditTicketPage />} />
