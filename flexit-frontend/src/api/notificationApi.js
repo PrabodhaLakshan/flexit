@@ -2,12 +2,31 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8081/api/notifications";
 
+const normalizeNotification = (notification) => {
+  if (!notification || typeof notification !== "object") {
+    return notification;
+  }
+
+  return {
+    ...notification,
+    isRead: Boolean(notification.isRead ?? notification.read),
+  };
+};
+
+const normalizeNotificationList = (items) => {
+  if (!Array.isArray(items)) {
+    return normalizeNotification(items);
+  }
+
+  return items.map((item) => normalizeNotification(item));
+};
+
 export const getMyNotifications = async (userId, role, limit) => {
   const response = await axios.get(`${API_BASE_URL}/my`, {
     params: { userId, role, limit },
   });
 
-  return response.data || [];
+  return normalizeNotificationList(response.data || []);
 };
 
 export const getMyUnreadNotificationCount = async (userId, role) => {
@@ -23,7 +42,7 @@ export const markMyNotificationAsRead = async (notificationId, userId, role) => 
     params: { userId, role },
   });
 
-  return response.data;
+  return normalizeNotification(response.data);
 };
 
 export const createLoginNotification = async ({ userId, role, fullName }) => {
@@ -33,7 +52,7 @@ export const createLoginNotification = async ({ userId, role, fullName }) => {
     fullName,
   });
 
-  return response.data;
+  return normalizeNotification(response.data);
 };
 
 export const createReactivationRequestNotification = async ({ userId, userCode, fullName }) => {
@@ -43,7 +62,7 @@ export const createReactivationRequestNotification = async ({ userId, userCode, 
     fullName,
   });
 
-  return response.data;
+  return normalizeNotification(response.data);
 };
 
 export const createAdminBroadcastNotification = async ({
@@ -75,7 +94,7 @@ export const getAdminSentNotifications = async (senderUserId, limit = 200) => {
     params: { senderUserId, limit },
   });
 
-  return response.data || [];
+  return normalizeNotificationList(response.data || []);
 };
 
 export const formatNotificationTime = (value) => {
