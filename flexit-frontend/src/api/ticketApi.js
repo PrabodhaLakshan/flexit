@@ -85,7 +85,17 @@ export function getAllTickets() {
 }
 
 export function getTechnicians() {
-  return request("http://localhost:8081/api/technicians");
+  return request("http://localhost:8081/api/auth/admin/users/summary").then((response) => {
+    if (!response || typeof response !== "object") {
+      return [];
+    }
+
+    const technicians = Array.isArray(response.technicians) ? response.technicians : [];
+    return technicians.map((tech) => ({
+      id: tech.userCode || tech.id,
+      name: tech.fullName || tech.name || "",
+    }));
+  });
 }
 
 export function getTicketById(id) {

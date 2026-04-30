@@ -1,16 +1,22 @@
 package com.flexit.controller;
 
 import com.flexit.dto.AuthResponse;
+import com.flexit.dto.AccountAccessStatusResponse;
+import com.flexit.dto.CreateTechnicianRequest;
 import com.flexit.dto.GoogleLoginRequest;
 import com.flexit.dto.LoginRequest;
 import com.flexit.dto.PasswordChangeRequest;
 import com.flexit.dto.PasswordStatusResponse;
+import com.flexit.dto.PresenceUpdateRequest;
 import com.flexit.dto.SignupRequest;
+import com.flexit.dto.UserDeactivationRequest;
+import com.flexit.dto.UserManagementSummaryResponse;
 import com.flexit.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,5 +59,51 @@ public class AuthController {
     @PostMapping("/password")
     public ResponseEntity<AuthResponse> setOrChangePassword(@Valid @RequestBody PasswordChangeRequest request) {
         return ResponseEntity.ok(authService.setOrChangePassword(request));
+    }
+
+    @GetMapping("/admin/users/summary")
+    public ResponseEntity<UserManagementSummaryResponse> getUserManagementSummary() {
+        return ResponseEntity.ok(authService.getUserManagementSummary());
+    }
+
+    @PostMapping("/admin/users/technicians")
+    public ResponseEntity<AuthResponse> createTechnician(@Valid @RequestBody CreateTechnicianRequest request) {
+        AuthResponse response = authService.createTechnician(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/admin/users/technicians/{id}")
+    public ResponseEntity<Void> deleteTechnician(@PathVariable String id) {
+        authService.deleteTechnician(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/admin/users/{id}")
+    public ResponseEntity<Void> deleteRegularUser(@PathVariable String id) {
+        authService.deleteRegularUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/admin/users/{id}/deactivation")
+    public ResponseEntity<AccountAccessStatusResponse> deactivateRegularUser(
+            @PathVariable String id,
+            @Valid @RequestBody UserDeactivationRequest request) {
+        return ResponseEntity.ok(authService.deactivateUser(id, request));
+    }
+
+    @PostMapping("/admin/users/{id}/reactivate")
+    public ResponseEntity<AccountAccessStatusResponse> reactivateRegularUser(@PathVariable String id) {
+        return ResponseEntity.ok(authService.reactivateUser(id));
+    }
+
+    @GetMapping("/status/{userIdOrCode}")
+    public ResponseEntity<AccountAccessStatusResponse> getAccountAccessStatus(@PathVariable String userIdOrCode) {
+        return ResponseEntity.ok(authService.getAccountAccessStatus(userIdOrCode));
+    }
+
+    @PostMapping("/presence")
+    public ResponseEntity<Void> updatePresence(@Valid @RequestBody PresenceUpdateRequest request) {
+        authService.updatePresence(request);
+        return ResponseEntity.noContent().build();
     }
 }

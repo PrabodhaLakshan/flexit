@@ -390,8 +390,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { googleLogin, loginUser } from '../api/authApi';
-import { addNotification } from '../utils/notifications';
+import { googleLogin, loginUser, updateUserPresence } from '../api/authApi';
+import { createLoginNotification } from '../api/notificationApi';
 import './Auth.css';
 
 const getErrorMessage = (err) => {
@@ -421,25 +421,37 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleAuthSuccess = (data) => {
+  const handleAuthSuccess = async (data) => {
     localStorage.setItem('flexitUser', JSON.stringify(data));
 
     const resolvedRole = String(data.role || '').toUpperCase();
     const resolvedUserId = data.userId || data.id;
-    const resolvedName = data.userName || data.fullName || data.name || 'User';
+    const resolvedUserCode = data.userCode;
+    const resolvedName = data.fullName || data.userName || data.name || 'User';
+    const notificationRecipientId =
+      resolvedRole === 'USER' ? (resolvedUserCode || resolvedUserId) : resolvedUserId;
 
-    if (resolvedRole === 'USER' && resolvedUserId) {
-      addNotification({
-        userId: resolvedUserId,
-        title: `👋 Welcome back, ${resolvedName}!`,
-        message: 'You have successfully logged in to your FlexIT workspace.',
-        type: 'greeting',
-        actionUrl: '/user/dashboard',
+    if (notificationRecipientId) {
+      await createLoginNotification({
+        userId: notificationRecipientId,
+        role: resolvedRole,
+        fullName: resolvedName,
+      }).catch((error) => {
+        console.error('Failed to create login notification:', error);
       });
     }
 
-    if (data.role === 'ADMIN') {
+    const presenceUserId = resolvedUserId || resolvedUserCode;
+    if (presenceUserId) {
+      await updateUserPresence({ userId: presenceUserId, online: true }).catch((error) => {
+        console.error('Failed to update user presence:', error);
+      });
+    }
+
+    if (resolvedRole === 'ADMIN') {
       navigate('/admin/dashboard');
+    } else if (resolvedRole === 'TECHNICIAN') {
+      navigate('/technician/dashboard');
     } else {
       navigate('/user/dashboard');
     }
@@ -470,7 +482,7 @@ function Login() {
         password: formData.password,
       });
 
-      handleAuthSuccess(data);
+      await handleAuthSuccess(data);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -489,7 +501,7 @@ function Login() {
 
     try {
       const data = await googleLogin({ idToken: credentialResponse.credential });
-      handleAuthSuccess(data);
+      await handleAuthSuccess(data);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

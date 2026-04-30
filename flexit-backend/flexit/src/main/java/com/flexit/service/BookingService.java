@@ -6,15 +6,21 @@ import com.flexit.repository.BookingRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
 public class BookingService {
+    private static final LocalTime BOOKING_START_TIME = LocalTime.of(8, 0);
+    private static final LocalTime BOOKING_END_TIME = LocalTime.of(20, 0);
 
     private final BookingRepository bookingRepository;
+    private final NotificationService notificationService;
 
-    public BookingService(BookingRepository bookingRepository) {
+    public BookingService(BookingRepository bookingRepository,
+                          NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
+        this.notificationService = notificationService;
     }
 
     public Booking createBooking(Booking booking) {
@@ -22,7 +28,9 @@ public class BookingService {
         checkConflict(booking);
 
         booking.setStatus(BookingStatus.PENDING);
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        notificationService.createBookingCreatedForAdmins(savedBooking);
+        return savedBooking;
     }
 
     public List<Booking> getAllBookings() {
@@ -45,14 +53,18 @@ public class BookingService {
     public Booking approveBooking(String id) {
         Booking booking = getBookingById(id);
         booking.setStatus(BookingStatus.APPROVED);
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        notificationService.createBookingApprovedForUser(savedBooking);
+        return savedBooking;
     }
 
     public Booking rejectBooking(String id, String reason) {
     Booking booking = getBookingById(id);
     booking.setStatus(BookingStatus.REJECTED);
     booking.setRejectionReason(reason);
-    return bookingRepository.save(booking);
+    Booking savedBooking = bookingRepository.save(booking);
+    notificationService.createBookingRejectedForUser(savedBooking);
+    return savedBooking;
 }
 
     public Booking cancelBooking(String id) {
@@ -73,6 +85,18 @@ public class BookingService {
 
         if (!startTime.isBefore(endTime)) {
             throw new RuntimeException("Start time must be before end time");
+        }
+
+        if (!startTime.toLocalDate().isEqual(endTime.toLocalDate())) {
+            throw new RuntimeException("Start time and end time must be within the same day");
+        }
+
+        LocalTime startLocalTime = startTime.toLocalTime();
+        LocalTime endLocalTime = endTime.toLocalTime();
+
+        if (startLocalTime.isBefore(BOOKING_START_TIME) || startLocalTime.isAfter(BOOKING_END_TIME)
+                || endLocalTime.isBefore(BOOKING_START_TIME) || endLocalTime.isAfter(BOOKING_END_TIME)) {
+            throw new RuntimeException("Bookings can only be scheduled between 8:00 AM and 8:00 PM");
         }
     }
 

@@ -7,6 +7,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document(collection = "users")
 public class User {
@@ -24,10 +26,24 @@ public class User {
 
     private String passwordHash;
 
+    private String contactNumber;
+
+    private List<String> categories = new ArrayList<>();
+
+    private String assignedArea;
+
     @Indexed(unique = true, sparse = true)
     private String userCode;
 
     private UserRole role;
+
+    private boolean active = true;
+
+    private LocalDateTime bannedUntil;
+
+    private boolean online;
+
+    private LocalDateTime lastSeenAt;
 
     private LocalDateTime createdAt;
 
@@ -74,6 +90,30 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
+    public List<String> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<String> categories) {
+        this.categories = categories;
+    }
+
+    public String getAssignedArea() {
+        return assignedArea;
+    }
+
+    public void setAssignedArea(String assignedArea) {
+        this.assignedArea = assignedArea;
+    }
+
     public String getUserCode() {
         return userCode;
     }
@@ -88,6 +128,38 @@ public class User {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public LocalDateTime getBannedUntil() {
+        return bannedUntil;
+    }
+
+    public void setBannedUntil(LocalDateTime bannedUntil) {
+        this.bannedUntil = bannedUntil;
+    }
+
+    public boolean isOnline() {
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
+    }
+
+    public LocalDateTime getLastSeenAt() {
+        return lastSeenAt;
+    }
+
+    public void setLastSeenAt(LocalDateTime lastSeenAt) {
+        this.lastSeenAt = lastSeenAt;
     }
 
     public LocalDateTime getCreatedAt() {

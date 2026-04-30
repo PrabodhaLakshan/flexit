@@ -29,12 +29,43 @@ function normalizeRole(value) {
 
 function firstNonEmpty(values) {
   for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+
     if (typeof value === "string" && value.trim()) {
       return value.trim();
     }
   }
 
   return "";
+}
+
+function parseBoolean(value, fallback = true) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+
+  return fallback;
+}
+
+function parseDateString(value) {
+  if (!value || typeof value !== "string") {
+    return "";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  return parsed.toISOString();
 }
 
 export function getSessionUser() {
@@ -51,6 +82,7 @@ export function getSessionUser() {
   const params = new URLSearchParams(window.location.search);
   const role = normalizeRole(params.get("role") || merged.role || "");
   const userIdCandidates = [params.get("userId"), merged.userId, merged.id];
+  const userCode = firstNonEmpty([params.get("userCode"), merged.userCode]);
 
   // Only technician sessions should resolve identity from techId values.
   if (role === "TECHNICIAN") {
@@ -62,23 +94,31 @@ export function getSessionUser() {
   const userName = firstNonEmpty([params.get("userName"), merged.userName, merged.name, merged.fullName]);
   const userEmail = firstNonEmpty([params.get("email"), merged.userEmail, merged.email]);
   const hasPassword = typeof merged.hasPassword === "boolean" ? merged.hasPassword : undefined;
+  const isActive = parseBoolean(merged.isActive ?? merged.active, true);
+  const bannedUntil = parseDateString(merged.bannedUntil);
 
   return {
     role,
     userId,
+    userCode,
     userName,
     userEmail,
     hasPassword,
+    isActive,
+    bannedUntil,
   };
 }
 
-export function setSessionUser({ role, userId, userName, userEmail, hasPassword }) {
+export function setSessionUser({ role, userId, userCode, userName, userEmail, hasPassword, isActive, bannedUntil }) {
   const nextUser = {
     role: normalizeRole(role),
     userId: firstNonEmpty([userId]),
+    userCode: firstNonEmpty([userCode]),
     userName: firstNonEmpty([userName]),
     userEmail: firstNonEmpty([userEmail]),
     hasPassword: typeof hasPassword === "boolean" ? hasPassword : undefined,
+    isActive: parseBoolean(isActive, true),
+    bannedUntil: parseDateString(bannedUntil),
   };
 
   localStorage.setItem("flexitUser", JSON.stringify(nextUser));
